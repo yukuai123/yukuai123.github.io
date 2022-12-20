@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>生日快乐！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        /* basic styles for black background and crosshair cursor */
+        body {
+            margin: 0px;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #bgCanvas {
+            cursor: crosshair;
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            z-index: -1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="drawing">
+        <!--&lt;!&ndash;更改为你的头像&ndash;&gt;-->
+        <div class="cs">
+            <img src="./img/gb.jpg" id="logo">
+            <img src="./img/dj.jpg" id="logo">
+        </div>
+        <canvas class="happyCanvas"></canvas>
+        <footer class="footer">
+            ©2022 生日快乐
+        </footer>
+    </div>
+    <!--//音乐可改-->
+    <audio autoplay="autoplay" loop="loop">
+        <source src="" type="audio/mpeg">
+    </audio>
+
+    <script src="./js/gb/Drawing.js"></script>
+    <script src="./js/gb/script.js"></script>
+
+    <!-- 特效背景 -->
+    <!-- <canvas id="bgCanvas"></canvas>
+    <script src="./js/script2.js"></script> -->
+</body>
+
+</html>

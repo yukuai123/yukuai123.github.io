@@ -4,7 +4,7 @@ var S = {
         S.Drawing.init('.happyCanvas');
         document.body.classList.add('body--ready');
         //想说的话
-        S.UI.simulate("|#countdown 3|祝|阿标&东锦|生|日|快|乐|Happy|Birthday|#rectangle 15x15|#circle 12|||shēng rì kuài lè");
+        S.UI.simulate("|#countdown 3|祝|阿|标|东|锦|生|日|快|乐|#rectangle 15x15|#circle 12|||芜湖");
         S.Drawing.loop(function () {
             S.Shape.render();
         });

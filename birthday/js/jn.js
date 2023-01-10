@@ -1,4 +1,4 @@
-function init(runStr = '|#countdown 3||祝|阿|南|生日快乐|#rectangle|无bug状态|') {
+function init(runStr = '|#countdown 3||祝|张|总|生日快乐|佳丽三Q|#rectangle|无bug状态|') {
     /*
   
       Shape Shifter

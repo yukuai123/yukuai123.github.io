@@ -158,8 +158,8 @@
         } else if(totalMinutes < totalWorkerLength) {
           result =  `
               <h3 style="margin-top: 20px">
-                <span> 工时不足 <span style="font-size: 20px"> ${totalWorkerLength-totalMinutes} </span> 分钟 </span>
-                <span> <span style="font-size: 20px">${((totalWorkerLength-totalMinutes)/60).toFixed(2)}</span> 小时 </span>
+                <span> 工时不足 <span style="font-size: 20px"> ${toFixed(totalWorkerLength-totalMinutes)} </span> 分钟 </span>
+                <span> <span style="font-size: 20px">${toFixed(((totalWorkerLength-totalMinutes)/60))}</span> 小时 </span>
                 需要努力
               </h3>`;
         } else {

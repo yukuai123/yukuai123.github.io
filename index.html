@@ -115,7 +115,7 @@
       return (Number(num)).toFixed(2)
     }
 
-    function renderExcelData(rowData) {
+    function renderExcelData(rowData, totalMinutes) {
       const totalWorkerLength = rowData.length * DAY_WORKER_MINUTE;
 
         let tableContent = `
@@ -201,8 +201,9 @@
           ret.rowData.push({ ...workerTime, day: currentDay, });
           return ret;
 
-          renderExcelData(rowData);
         }, { rowData: [], totalMinutes: 0 });
+
+        renderExcelData(rowData,  totalMinutes);
 
 
       };

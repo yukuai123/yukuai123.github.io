@@ -1,0 +1,20 @@
+{
+  "name": "workerTime",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack",
+    "server": "webpack serve",
+    "zip": "node ./zip.js"
+  },
+  "dependencies": {
+    "copy-webpack-plugin": "^12.0.2",
+    "dayjs": "^1.11.11",
+    "jszip": "^3.10.1",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
+  }
+}

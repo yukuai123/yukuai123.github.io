@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>助手</title>
+    <meta charset="utf-8" http-equiv="Content-Security-Policy"
+        content="default-src 'self' data: gap: https://honghaioffice.tastien-external.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *;script-src * 'unsafe-inline'">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
+<body style="padding: 8px; min-width: 150px;">
+    <div style="display: flex; items-align: center;">
+        <h5 style="padding-bottom: 4px; padding-right: 8px;">月份</h5>
+        <select id="selectedMonth">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+        </select>
+    </div>
+    <button style="border-radius: 4px;outline: none; border: 1px solid #000; background: none; cursor: pointer; padding: 3; margin-top: 8px; display: block; width: 100%;" onclick="start()" id="submit">导出报表</button>
+    <script type="text/javascript" src="js/popup.js"></script>
+</body>
+
+
+</html>

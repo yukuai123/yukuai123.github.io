@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "工时助手",
+  "version": "1.0",
+  "description": "Display a popup whenever a new tab is opened.",
+  "background": {
+    "service_worker": "./js/background.js"
+  },
+  "content_scripts": [{ "matches": ["<all_urls>"], "js": ["./app.js"] }],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "./icon.png",
+      "48": "./icon.png",
+      "128": "./icon.png"
+    }
+  },
+  "icons": {
+    "16": "./icon.png",
+    "48": "./icon.png",
+    "128": "./icon.png"
+  },
+  "permissions": ["tabs"]
+}

@@ -49,20 +49,22 @@ chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
         );
 
         const allWorkerDayDetail = await Promise.all(
-          workerDays.map((item) => {
-            return request.post(
-              `https://honghaioffice.tastien-external.com/RedseaPlatform/redmagicapi/rf_s_kq_count_SelectStaffIDDaily/getExecuteResult.mc`,
-              formatQueryParams({
-                staff_id: staffId,
-                work_day: item.work_day,
-              }).slice(1),
-              {
-                headers: {
-                  "content-type": `application/x-www-form-urlencoded`,
-                },
-              }
-            );
-          })
+          workerDays
+            .filter((item) => item.work_day !== dayjs().format("YYYY-MM-DD"))
+            .map((item) => {
+              return request.post(
+                `https://honghaioffice.tastien-external.com/RedseaPlatform/redmagicapi/rf_s_kq_count_SelectStaffIDDaily/getExecuteResult.mc`,
+                formatQueryParams({
+                  staff_id: staffId,
+                  work_day: item.work_day,
+                }).slice(1),
+                {
+                  headers: {
+                    "content-type": `application/x-www-form-urlencoded`,
+                  },
+                }
+              );
+            })
         );
 
         const exportExcelData = formatExportExcelData(allWorkerDayDetail, {

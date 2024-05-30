@@ -18,6 +18,7 @@ let DAY_WORKER_MINUTE = 60 * 9;
 chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
   if (args.type == "run") {
     const month = args.payload.month;
+    const includeDay = args.payload.includeDay;
 
     (async function () {
       try {
@@ -50,7 +51,9 @@ chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
 
         const allWorkerDayDetail = await Promise.all(
           workerDays
-            .filter((item) => item.work_day !== dayjs().format("YYYY-MM-DD"))
+            .filter((item) =>
+              includeDay ? true : item.work_day !== dayjs().format("YYYY-MM-DD")
+            )
             .map((item) => {
               return request.post(
                 `https://honghaioffice.tastien-external.com/RedseaPlatform/redmagicapi/rf_s_kq_count_SelectStaffIDDaily/getExecuteResult.mc`,

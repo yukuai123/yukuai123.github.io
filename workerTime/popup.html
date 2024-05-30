@@ -13,6 +13,10 @@
     </style>
 
 <body style="padding: 8px; min-width: 150px;">
+    <div style="padding: 8px 0px;">
+        <a target="_blank" id="link">考勤授权链接</a>
+    </div>
+
     <div style="display: flex; items-align: center;">
         <h5 style="padding-bottom: 4px; padding-right: 8px;">月份</h5>
         <select id="selectedMonth">
@@ -30,7 +34,18 @@
             <option value="12">12</option>
         </select>
     </div>
-    <button style="border-radius: 4px;outline: none; border: 1px solid #000; background: none; cursor: pointer; padding: 3; margin-top: 8px; display: block; width: 100%;" onclick="start()" id="submit">导出报表</button>
+
+    <div style="display: flex; items-align: center;">
+        <h5 style="padding-top: 4px; padding-right: 8px;">是否包含今天</h5>
+        <select id="includeDay">
+            <option value="1">是</option>
+            <option value="0">否</option>
+        </select>
+    </div>
+
+    <button
+        style="border-radius: 4px;outline: none; border: 1px solid #000; background: none; cursor: pointer; padding: 3; margin-top: 8px; display: block; width: 100%;"
+        id="submit">导出报表</button>
     <script type="text/javascript" src="js/popup.js"></script>
 </body>
 

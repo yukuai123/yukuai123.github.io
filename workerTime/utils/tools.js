@@ -11,8 +11,8 @@ export function formatQueryParams(params) {
     .join("&")}`;
 }
 
-export function formatTime(day, time) {
-  return time ? `${day} ${time}` : 0;
+export function formatTime(time) {
+  return time ? time : 0;
 }
 
 export function calcWorkerTimeByDay(
@@ -22,8 +22,8 @@ export function calcWorkerTimeByDay(
   { DAY_WORKER_TIME, DAY_WORKER_MINUTE }
 ) {
   const dayFormat = ["日", "一", "二", "三", "四", "五", "六"];
-  const startTimeInfo = formatTime(workDay, begin);
-  const endTimeInfo = formatTime(workDay, end);
+  const startTimeInfo = formatTime(begin);
+  const endTimeInfo = formatTime(end);
 
   if (!startTimeInfo || !endTimeInfo) {
     return {
@@ -90,8 +90,8 @@ export function formatExportExcelData(
     const worInfo = (Array.isArray(item.jsonList) && item.jsonList[0]) || {};
 
     return calcWorkerTimeByDay(
-      worInfo.sb_time || 0,
-      worInfo.xb_time || 0,
+      worInfo.sb_dk_time || 0,
+      worInfo.xb_dk_time || 0,
       worInfo.work_day,
       { DAY_WORKER_TIME, DAY_WORKER_MINUTE }
     );

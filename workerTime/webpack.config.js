@@ -23,6 +23,13 @@ module.exports = {
         test: /\.(png|svg|jpg|gif)$/,
         use: ["file-loader"],
       },
+      {
+        test: /\.(ttf)$/,
+        type: "asset/resource",
+        generator: {
+          filename: "[name][ext]",
+        },
+      },
     ],
   },
   devServer: {

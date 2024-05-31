@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { default as duration } from "dayjs/plugin/duration";
 import request from "./utils/request";
+import "./lib/zpix.ttf";
 import {
   downloadExcel,
   formatQueryParams,

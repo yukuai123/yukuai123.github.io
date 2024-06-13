@@ -2,14 +2,15 @@ const btn = document.getElementById("submit");
 const select = document.getElementById("selectedMonth");
 const includeDay = document.getElementById("includesDay");
 const link = document.getElementById("link");
+const calcBtn = document.getElementById("calc");
+const calcContent = document.getElementById("calcContent");
 
 select.value = Number(new Date().getMonth()) + 1;
 includeDay.checked = false;
 
-// 可以获取到background.js中设置的函数,
-const background = chrome.extension.getBackgroundPage();
 // 点击按钮getBackgroundPage()
 btn.onclick = function (e) {
+  console.log("btn");
   chrome.runtime.sendMessage({
     type: "start",
     payload: {
@@ -17,6 +18,22 @@ btn.onclick = function (e) {
       includeDay: includeDay.checked,
     },
   });
+};
+
+calcBtn.onclick = () => {
+  chrome.runtime.sendMessage(
+    {
+      type: "calc",
+      payload: {
+        month: select.value - 1,
+        includeDay: includeDay.checked,
+      },
+    },
+    (data) => {
+      const payload = data.payload || {};
+      calcContent.innerHTML = `<div>${payload.renderHourText}</div><div>${payload.renderMinText}</div>`;
+    }
+  );
 };
 
 link.onclick = function () {

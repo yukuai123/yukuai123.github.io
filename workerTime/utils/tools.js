@@ -105,18 +105,15 @@ export function formatExportExcelData(
     { totalDiffMins: 0, totalDiffHours: 0 }
   );
 
+  let renderHourText = "暂无数据";
+  let renderMinText = "暂无数据";
   if (formatTimeData.length) {
-    let renderHourText = "";
-    let renderMinText = "";
-
     if (totalDiffHours > 0) {
-      renderMinText = `剩余 ${toFixed(totalDiffMins)}分钟， 可以调休`;
-      renderHourText = `剩余 ${toFixed(totalDiffHours)}小时， 可以调休`;
+      renderMinText = `可以调休${toFixed(totalDiffMins)}分钟`;
+      renderHourText = `可以调休${toFixed(totalDiffHours)}小时`;
     } else if (totalDiffHours < 0) {
-      renderMinText = `工时不足，还有 ${toFixed(totalDiffMins)}分钟， 需要努力`;
-      renderHourText = `工时不足， 还有 ${toFixed(
-        totalDiffHours
-      )}小时， 需要努力`;
+      renderMinText = `工时不足${Number(toFixed(totalDiffMins))}分钟`;
+      renderHourText = `工时不足${Number(toFixed(totalDiffHours))}小时`;
     } else {
       renderMinText = `时间管理大师！ 正常上下班即可。`;
       renderHourText = `时间管理大师！ 正常上下班即可。`;
@@ -125,7 +122,7 @@ export function formatExportExcelData(
     formatTimeData[0].totalDiffHours = renderHourText;
   }
 
-  return formatTimeData;
+  return { formatTimeData, renderMinText, renderHourText };
 }
 
 export function downloadExcel(rowData) {

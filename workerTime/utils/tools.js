@@ -86,20 +86,26 @@ export function formatExportExcelData(
   allWorkerDayDetail,
   { DAY_WORKER_MINUTE, DAY_WORKER_TIME }
 ) {
-  const formatTimeData = allWorkerDayDetail.map((item) => {
-    const worInfo = (Array.isArray(item.jsonList) && item.jsonList[0]) || {};
-
-    return calcWorkerTimeByDay(
-      worInfo.sb_dk_time || 0,
-      worInfo.xb_dk_time || 0,
-      worInfo.work_day,
-      { DAY_WORKER_TIME, DAY_WORKER_MINUTE }
-    );
-  });
+  const formatTimeData = allWorkerDayDetail
+    .filter((item) => Array.isArray(item.jsonList) && item.jsonList[0])
+    .map((item) => {
+      const worInfo = (Array.isArray(item.jsonList) && item.jsonList[0]) || {};
+      return calcWorkerTimeByDay(
+        worInfo.sb_dk_time || 0,
+        worInfo.xb_dk_time || 0,
+        worInfo.work_day,
+        { DAY_WORKER_TIME, DAY_WORKER_MINUTE }
+      );
+    });
   const { totalDiffMins, totalDiffHours } = formatTimeData.reduce(
     (ret, next) => {
-      ret.totalDiffMins += Number(next.diffMins) || -DAY_WORKER_MINUTE;
-      ret.totalDiffHours += Number(next.diffHour) || -DAY_WORKER_TIME;
+      const isNotCalc = next.hour === "忘记打卡";
+      ret.totalDiffMins += isNotCalc
+        ? -DAY_WORKER_MINUTE
+        : Number(next.diffMins);
+      ret.totalDiffHours += isNotCalc
+        ? -DAY_WORKER_TIME
+        : Number(next.diffHour);
       return ret;
     },
     { totalDiffMins: 0, totalDiffHours: 0 }

@@ -10,7 +10,6 @@ includeDay.checked = false;
 
 // 点击按钮getBackgroundPage()
 btn.onclick = function (e) {
-  console.log("btn");
   chrome.runtime.sendMessage({
     type: "start",
     payload: {

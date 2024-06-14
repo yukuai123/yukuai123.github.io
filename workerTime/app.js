@@ -83,7 +83,6 @@ async function onHandleData(month, includeDay) {
 
 // content.js
 chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
-  console.log(args, "??");
   if (args.type == "run") {
     const month = args.payload.month;
     const includeDay = args.payload.includeDay;

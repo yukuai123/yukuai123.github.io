@@ -36,7 +36,6 @@ function handler(type, payload, sendResponse) {
               payload: Object.assign(payload, { id }),
             },
             (payload) => {
-              console.log("calc", payload);
               sendResponse(payload);
             }
           );

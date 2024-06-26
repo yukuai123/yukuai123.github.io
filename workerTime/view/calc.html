@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" http-equiv="Content-Security-Policy"
+        content="default-src 'self' data: gap: * 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *;script-src * 'unsafe-inline'">
+    <title>工时助手</title>
+    <style>
+        @fontface {
+            fontfamily: 'Zpix';
+            src: url('./Zpix.ttf');
+            fontweight: normal;
+            fontstyle: normal;
+        }
+
+        body {
+            font-family: 'Zpix', 'Press Start 2P', cursive;
+            font-size: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        th,
+        td {
+            padding: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root" style="display: block; margin: 0 10%">
+        <div class="flex flex-col items-center justify-center" style="width: 800px; height: 30px">
+            <div class="flex items-center justify-center">
+                <span style="font-size: 18px;padding-right: 8px; font-size: 16px; padding-bottom: 15px">工时概览</span>
+            </div>
+        </div>
+        <div id="table-content"></div>
+        <div id="result-content"></div>
+    </div>
+    <script type="text/javascript" src="./calc.js"></script>
+</body>
+
+</html>

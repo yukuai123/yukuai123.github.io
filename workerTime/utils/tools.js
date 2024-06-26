@@ -27,6 +27,8 @@ export function calcWorkerTimeByDay(
 
   if (!startTimeInfo || !endTimeInfo) {
     return {
+      originDay: workDay,
+      weekNumber: dayjs(workDay).week(),
       hour: "忘记打卡",
       minutes: "忘记打卡",
       diffMins: "忘记打卡",
@@ -49,6 +51,8 @@ export function calcWorkerTimeByDay(
   const hour = duration.as("hours");
 
   return {
+    originDay: workDay,
+    weekNumber: dayjs(workDay).week(),
     workDay: `${workDay} (星期${dayFormat[dayjs(workDay).day()]})`,
     hour: toFixed(hour),
     minutes: toFixed(minutes),
@@ -86,7 +90,7 @@ export function formatExportExcelData(
   allWorkerDayDetail,
   { DAY_WORKER_MINUTE, DAY_WORKER_TIME }
 ) {
-  const formatTimeData = allWorkerDayDetail
+  let formatTimeData = allWorkerDayDetail
     .filter((item) => Array.isArray(item.jsonList) && item.jsonList[0])
     .map((item) => {
       const worInfo = (Array.isArray(item.jsonList) && item.jsonList[0]) || {};
@@ -97,6 +101,60 @@ export function formatExportExcelData(
         { DAY_WORKER_TIME, DAY_WORKER_MINUTE }
       );
     });
+
+  const formatWeekData = formatTimeData.reduce((ret, next) => {
+    /** 合并行 */
+    /** rowspan */
+    const info = ret[next.weekNumber];
+
+    const currentDiffHour =
+      next.diffHour !== "忘记打卡" ? Number(next.diffHour) : 0;
+    const currentDiffMins =
+      next.diffMins !== "忘记打卡" ? Number(next.diffMins) : 0;
+
+    const currentHour = next.hour !== "忘记打卡" ? Number(next.hour) : 0;
+    const currentMins = next.minutes !== "忘记打卡" ? Number(next.minutes) : 0;
+
+    if (!info) {
+      ret[next.weekNumber] = {
+        rowspan: 1,
+        originDay: next.originDay,
+        weekHour: currentHour,
+        weekMins: currentMins,
+        diffWeekHour: currentDiffHour,
+        diffWeekMins: currentDiffMins,
+      };
+    } else {
+      ret[next.weekNumber].rowspan += 1;
+      ret[next.weekNumber].weekHour += currentHour;
+      ret[next.weekNumber].weekMins += currentMins;
+      ret[next.weekNumber].diffWeekHour += currentDiffHour;
+      ret[next.weekNumber].diffWeekMins += currentDiffMins;
+    }
+
+    return ret;
+  }, {});
+
+  /** 将周数转为从1开始的数字 */
+  const weekNumberMap = Object.keys(formatWeekData).reduce(
+    (ret, next, index) => {
+      ret[next] = index + 1;
+      return ret;
+    },
+    {}
+  );
+
+  formatTimeData = formatTimeData.map((item) => {
+    if (item.originDay === formatWeekData[item.weekNumber].originDay) {
+      return {
+        ...item,
+        ...formatWeekData[item.weekNumber],
+        convertWeekNumber: weekNumberMap[item.weekNumber],
+      };
+    }
+    return item;
+  });
+
   const { totalDiffMins, totalDiffHours } = formatTimeData.reduce(
     (ret, next) => {
       const isNotCalc = next.hour === "忘记打卡";
@@ -128,7 +186,7 @@ export function formatExportExcelData(
     formatTimeData[0].totalDiffHours = renderHourText;
   }
 
-  return { formatTimeData, renderMinText, renderHourText };
+  return { formatTimeData, renderMinText, renderHourText, formatWeekData };
 }
 
 export function downloadExcel(rowData) {

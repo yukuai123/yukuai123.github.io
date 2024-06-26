@@ -1,5 +1,9 @@
 import dayjs from "dayjs";
 import { default as duration } from "dayjs/plugin/duration";
+import { default as weekOfYear } from "dayjs/plugin/weekOfYear";
+import { default as updateLocale } from "dayjs/plugin/updateLocale";
+import { default as localeData } from "dayjs/plugin/localeData";
+
 import request from "./utils/request";
 import "./lib/zpix.ttf";
 import {
@@ -9,6 +13,13 @@ import {
 } from "./utils/tools";
 
 dayjs.extend(duration);
+dayjs.extend(weekOfYear);
+dayjs.extend(updateLocale);
+dayjs.extend(localeData);
+dayjs.locale("zh-cn");
+dayjs.updateLocale("zh-cn", {
+  weekStart: 1, // 配置为周一
+});
 
 /** 默认一天工作小时数 */
 let DAY_WORKER_TIME = 9;
@@ -66,6 +77,7 @@ async function onHandleData(month, includeDay) {
       formatTimeData: exportExcelData,
       renderMinText,
       renderHourText,
+      formatWeekData,
     } = formatExportExcelData(allWorkerDayDetail, {
       DAY_WORKER_TIME,
       DAY_WORKER_MINUTE,
@@ -75,6 +87,7 @@ async function onHandleData(month, includeDay) {
       renderMinText,
       renderHourText,
       exportExcelData,
+      formatWeekData,
     };
   } catch (e) {
     console.log(e, "error");
@@ -100,6 +113,28 @@ chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
           renderHourText: res.renderHourText,
           renderMinText: res.renderMinText,
         },
+      });
+    });
+  }
+  if (args.type == "calcOnline") {
+    const month = args.payload.month;
+    const includeDay = args.payload.includeDay;
+    onHandleData(month, includeDay).then((res) => {
+      chrome.storage.sync.get().then((items) => {
+        chrome.storage.sync
+          .set({
+            ...items,
+            renderHourText: res.renderHourText,
+            renderMinText: res.renderMinText,
+            excelData: res.exportExcelData,
+          })
+          .then(() => {
+            sendResponse({
+              payload: {
+                type: "calcOnline",
+              },
+            });
+          });
       });
     });
   }

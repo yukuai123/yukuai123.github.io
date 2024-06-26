@@ -20,5 +20,5 @@
     "48": "./icon.png",
     "128": "./icon.png"
   },
-  "permissions": ["tabs"]
+  "permissions": ["tabs", "storage"]
 }

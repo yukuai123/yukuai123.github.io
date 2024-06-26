@@ -49,6 +49,9 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [{ from: "popup.html", to: "popup.html" }],
     }),
+    new CopyWebpackPlugin({
+      patterns: [{ from: "view", to: "view" }],
+    }),
     new webpack.HotModuleReplacementPlugin(),
   ],
 };

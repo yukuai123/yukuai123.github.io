@@ -43,6 +43,23 @@ function handler(type, payload, sendResponse) {
       });
       break;
     }
+    case "calcOnline": {
+      queryTabId().then((id) => {
+        if (id) {
+          chrome.tabs.sendMessage(
+            id,
+            {
+              type: "calcOnline",
+              payload: Object.assign(payload, { id }),
+            },
+            () => {
+              chrome.tabs.create({ url: "./view/calc.html" });
+            }
+          );
+        }
+      });
+      break;
+    }
   }
 }
 

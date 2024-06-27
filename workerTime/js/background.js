@@ -1,63 +1,28 @@
-function queryTabId() {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.query({}).then((tabs) => {
-      const list = tabs.filter((item) => {
-        const url = new URL(item.url);
-        const isHomePage = url.host.includes(
-          "honghaioffice.tastien-external.com"
-        );
-        return isHomePage;
-      });
+import { chromeTabsSendMessage, queryChromeActiveTabId } from "../utils/native";
 
-      const target = list.find((i) => i.active) || list[0];
-
-      resolve(target ? target.id : null);
-    });
-  });
-}
-
-function handler(type, payload, sendResponse) {
+async function handler(type, payload, sendResponse) {
+  const id = await queryChromeActiveTabId();
   switch (type) {
     case "start": {
-      queryTabId().then((id) => {
-        if (id) {
-          chrome.tabs.sendMessage(id, { type: "run", payload });
-        }
-      });
+      if (id) {
+        chromeTabsSendMessage(id, { type: "run", payload });
+      }
       break;
     }
     case "calc": {
-      queryTabId().then((id) => {
-        if (id) {
-          chrome.tabs.sendMessage(
-            id,
-            {
-              type: "calc",
-              payload: Object.assign(payload, { id }),
-            },
-            (payload) => {
-              sendResponse(payload);
-            }
-          );
-        }
-      });
+      if (id) {
+        chromeTabsSendMessage(id, { type: "calc" }, (payload) => {
+          sendResponse(payload);
+        });
+      }
       break;
     }
     case "calcOnline": {
-      queryTabId().then((id) => {
-        if (id) {
-          chrome.tabs.sendMessage(
-            id,
-            {
-              type: "calcOnline",
-              payload: Object.assign(payload, { id }),
-            },
-            () => {
-              chrome.tabs.create({ url: "./view/calc.html" });
-            }
-          );
-        }
-      });
+      if (id) {
+        chromeTabsSendMessage(id, { type: "calcOnline" }, () => {
+          chrome.tabs.create({ url: "./view/calc.html" });
+        });
+      }
       break;
     }
   }

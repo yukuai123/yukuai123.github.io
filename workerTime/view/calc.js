@@ -1,3 +1,14 @@
+function renderTipColor(time) {
+  if (Number(time) !== Number(time)) return "";
+  return time > 0 ? 'style="color:green"' : 'style="color:red"';
+}
+
+function renderTipText(time, afterText) {
+  return time > 0
+    ? `可调休: ${time.toFixed(2)}${afterText}`
+    : `工时不足: ${time.toFixed(2)}${afterText}`;
+}
+
 function renderExcelData(rowData, { renderHourText, renderMinText }) {
   const tableContentDom = document.querySelector("#table-content");
   const resultContentDom = document.querySelector("#result-content");
@@ -25,67 +36,45 @@ function renderExcelData(rowData, { renderHourText, renderMinText }) {
                           <td>${item.workDay}</td>
                           <td>${item.hour}</td>
                           <td>${item.minutes}</td>
-                          <td ${
-                            item.diffHour > 0
-                              ? 'style="color:green"'
-                              : 'style="color:red"'
-                          }>${item.diffHour}</td>
-                          <td ${
-                            item.diffMins > 0
-                              ? 'style="color:green"'
-                              : 'style="color:red"'
-                          }>${item.diffMins}</td>
+                          <td ${renderTipColor(item.diffHour)}>
+                              ${item.diffHour}
+                          </td>
+                          <td ${renderTipColor(item.diffMins)}>
+                            ${item.diffMins}
+                          </td>
                           <td>${item.startTime}</td>
                           <td>${item.endTime}</td>
                           ${
                             item.rowspan > 0
                               ? `<td rowspan=${item.rowspan}>
-                                  <div>
-                                    本月第${item.convertWeekNumber}周
-                                  </div>
-                                  <div style="padding: 8px 0">周工时：${item.weekHour.toFixed(
-                                    2
-                                  )}h</div>
-                                  <div ${
-                                    item.diffWeekHour > 0
-                                      ? 'style="color:green"'
-                                      : 'style="color:red"'
-                                  }>
-                                    ${
-                                      item.diffWeekHour > 0
-                                        ? `可调休: ${item.diffWeekHour.toFixed(
-                                            2
-                                          )}h`
-                                        : `工时不足: ${item.diffWeekHour.toFixed(
-                                            2
-                                          )}h`
-                                    }
-                                  </div>
-                                </td>
-                                <td rowspan=${item.rowspan}>
-                                  <div>
-                                    本月第${item.convertWeekNumber}周
-                                  </div>
-                                  <div style="padding: 8px 0">周工时：${item.weekMins.toFixed(
-                                    2
-                                  )}h</div>
-                                  <div ${
-                                    item.diffWeekMins > 0
-                                      ? 'style="color:green"'
-                                      : 'style="color:red"'
-                                  }>
-                                    ${
-                                      item.diffWeekMins > 0
-                                        ? `可调休: ${item.diffWeekMins.toFixed(
-                                            2
-                                          )}分钟`
-                                        : `工时不足: ${item.diffWeekMins.toFixed(
-                                            2
-                                          )}分钟`
-                                    }
-                                  </div>
-                                </td>
-                            `
+                                    <div>
+                                      本月第${item.convertWeekNumber}周
+                                    </div>
+                                    <div style="padding: 8px 0">
+                                      周工时：${item.weekHour.toFixed(2)}小时
+                                    </div>
+                                    <div ${renderTipColor(item.diffWeekHour)}>
+                                      ${renderTipText(
+                                        item.diffWeekHour,
+                                        "小时"
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td rowspan=${item.rowspan}>
+                                    <div>
+                                      本月第${item.convertWeekNumber}周
+                                    </div>
+                                    <div style="padding: 8px 0">
+                                      周工时：${item.weekMins.toFixed(2)}分钟
+                                    </div>
+                                    <div ${renderTipColor(item.diffWeekMins)}>
+                                      ${renderTipText(
+                                        item.diffWeekMins,
+                                        "分钟"
+                                      )}
+                                    </div>
+                                  </td>
+                                `
                               : ""
                           }
                         </tr>

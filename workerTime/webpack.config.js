@@ -6,11 +6,13 @@ module.exports = {
   mode: "production",
   watch: true,
   entry: {
-    app: "./app.js",
+    popup: "./js/popup.js",
+    content: "./js/content.js",
+    background: "./js/background.js",
   },
   output: {
     clean: true,
-    filename: "[name].js",
+    filename: "js/[name].js",
     path: path.resolve(__dirname, "dist"),
   },
   module: {
@@ -33,8 +35,8 @@ module.exports = {
     ],
   },
   devServer: {
-    static: "./dist",
     hot: true,
+    static: "./dist",
   },
   plugins: [
     new CopyWebpackPlugin({
@@ -42,9 +44,6 @@ module.exports = {
     }),
     new CopyWebpackPlugin({
       patterns: [{ from: "icon.png", to: "icon.png" }],
-    }),
-    new CopyWebpackPlugin({
-      patterns: [{ from: "js", to: "js" }],
     }),
     new CopyWebpackPlugin({
       patterns: [{ from: "popup.html", to: "popup.html" }],

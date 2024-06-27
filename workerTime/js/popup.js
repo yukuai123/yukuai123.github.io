@@ -1,56 +1,71 @@
-const btn = document.getElementById("submit");
-const select = document.getElementById("selectedMonth");
-const includeDay = document.getElementById("includesDay");
-const link = document.getElementById("link");
-const calcBtn = document.getElementById("calc");
-const calcContent = document.getElementById("calcContent");
-const calcOnline = document.getElementById("calcOnline");
+import Storage from "../utils/storage";
+import { AUTH_LINK } from "../utils/consts";
+import { chromeRuntimeSendMessage } from "../utils/native";
 
-select.value = Number(new Date().getMonth()) + 1;
-includeDay.checked = false;
+function load() {
+  /** 导出报表 */
+  const btn = document.getElementById("submit");
+  /** 选择月份 */
+  const select = document.getElementById("selectedMonth");
+  /** 是否包含今天内容 */
+  const includeDay = document.getElementById("includesDay");
+  /** 授权链接按钮 */
+  const link = document.getElementById("link");
+  /** 在线计算时长展示在popup.html上的按钮 */
+  const calcBtn = document.getElementById("calc");
+  /** 渲染在popup.html上时长的内容 */
+  const calcContent = document.getElementById("calcContent");
+  /** 在线按钮 */
+  const calcOnline = document.getElementById("calcOnline");
 
-// 点击按钮getBackgroundPage()
-btn.onclick = function (e) {
-  chrome.runtime.sendMessage({
-    type: "start",
-    payload: {
-      month: select.value - 1,
-      includeDay: includeDay.checked,
-    },
-  });
-};
+  btn.onclick = () => chromeRuntimeSendMessage({ type: "start" });
 
-calcBtn.onclick = () => {
-  chrome.runtime.sendMessage(
-    {
-      type: "calc",
-      payload: {
-        month: select.value - 1,
-        includeDay: includeDay.checked,
+  calcBtn.onclick = () => {
+    chromeRuntimeSendMessage(
+      {
+        type: "calc",
       },
-    },
-    (data) => {
-      const payload = data.payload || {};
-      calcContent.innerHTML = `<div>${payload.renderHourText}</div><div>${payload.renderMinText}</div>`;
+      (data) => {
+        const payload = data.payload || {};
+        calcContent.innerHTML = `<div>${payload.renderHourText}</div><div>${payload.renderMinText}</div>`;
+      }
+    );
+  };
+
+  calcOnline.onclick = () => chromeRuntimeSendMessage({ type: "calcOnline" });
+
+  link.onclick = () => window.open(AUTH_LINK);
+
+  /** 初始化配置 */
+  const initConfig = async () => {
+    let defaultMonth = Number(new Date().getMonth()) + 1;
+    let defaultIncludeDay = false;
+
+    const { month, includeDay: storeIncludeDay } = await Storage.get();
+
+    if (month !== undefined) {
+      defaultMonth = month;
     }
-  );
-};
 
-link.onclick = function () {
-  window.open(
-    "https://open.feishu.cn/open-apis/authen/v1/user_auth_page_beta?app_id=cli_a5fbe12e2278d013&redirect_uri=https%3A%2F%2Fhonghaioffice.tastien-external.com%2Ffastdev%2Fapi%2Flark%2Foauth2%2Fsso%3FagentId%3Dcli_a5fbe12e2278d013%26toUrl%3DL1JlZHNlYVBsYXRmb3JtL2Zyb250L21vYmlsZS9pbmRleC5odG1sIy9hdHRlbmRhbmNlL2txX2NvdW50X3BlcnNvbj95ZWFyTW9udGg9MjAyNC0wNQ%3D%3D%26bind%3D1%26bindPage%3D1%26client%3Dlark&state="
-  );
-};
+    if (storeIncludeDay !== undefined) {
+      defaultIncludeDay = storeIncludeDay;
+    }
 
-calcOnline.onclick = function () {
-  chrome.runtime.sendMessage({
-    type: "calcOnline",
-    payload: {
-      month: select.value - 1,
-      includeDay: includeDay.checked,
-    },
+    select.value = defaultMonth;
+    includeDay.checked = defaultIncludeDay;
+
+    Storage.update("month", defaultMonth);
+    Storage.update("includeDay", defaultIncludeDay);
+
+    select.onchange = (e) => Storage.update("month", e.target.value);
+    includeDay.onchange = (e) => Storage.update("includeDay", e.target.checked);
+  };
+
+  /** 加载事件 */
+  document.addEventListener("DOMContentLoaded", initConfig);
+  document.addEventListener("beforeunload", () => {
+    Storage.remove(["month", "includeDay"]);
   });
-  // chrome.tabs.create({
-  //   url: "./calc.html"
-  // });
-};
+}
+
+load();

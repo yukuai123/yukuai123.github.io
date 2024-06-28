@@ -115,8 +115,10 @@ async function onHandleData() {
         /** 工作日 */
         if (target.datetypename === "工作日") {
           if ((!target.sb_dk_time || !target.xb_dk_time) && ignoreForgetDK) {
-            target.sb_dk_time = `${target.work_day} 09:00:00`;
-            target.xb_dk_time = `${target.work_day} 18:00:00`;
+            target.sb_dk_time =
+              target.sb_dk_time || `${target.work_day} 09:00:00`;
+            target.xb_dk_time =
+              target.xb_dk_time || `${target.work_day} 18:00:00`;
             target.ignoreForgetDK = true;
           }
         }

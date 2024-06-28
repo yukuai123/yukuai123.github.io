@@ -25,7 +25,7 @@
     </style>
 
 <body style="padding: 8px; min-width: 250px;">
-    <div style="text-align: center; padding: 8px;">工时助手v2.0</div>
+    <div style="text-align: center; padding: 8px;">工时助手v3.0</div>
     <div style="padding: 8px 0px; display: flex; align-items: center;">
         <a target="_blank" style="white-space: nowrap;">考勤授权链接</a>
         <button id="link" id="submit"
@@ -56,6 +56,13 @@
                 <span className="nes-text">包含今天数据</span>
             </label>
         </div>
+    </div>
+
+    <div style="padding-top: 8px;">
+        <label style="display: flex; align-items: center;">
+            <input type="checkbox" class="nes-checkbox" id="ignoreForgetDK" />
+            <span className="nes-text">未打卡时段计入工时(工作日)</span>
+        </label>
     </div>
 
 

@@ -54,14 +54,15 @@ const useCacheTime = (time, currentParams) => {
 
 async function onHandleData() {
   try {
-    const { month, includeDay, updateTime, ...rest } = await Storage.get();
+    const { month, includeDay, updateTime, ignoreForgetDK, ...rest } =
+      await Storage.get();
 
-    const currentParams = { month, includeDay };
+    const currentParams = { month, includeDay, ignoreForgetDK };
     const allowCache = useCacheTime(updateTime, currentParams);
 
     if (allowCache) {
       cacheParams = currentParams;
-      return rest;
+      return { ...rest, month };
     } else {
       cacheParams = currentParams;
     }
@@ -96,8 +97,6 @@ async function onHandleData() {
         .map((item) => querySbDayDetail({ staffId, workDay: item.work_day }))
     );
 
-    console.log(JSON.parse(JSON.stringify(allWorkerDayDetail)));
-
     allWorkerDayDetail = allWorkerDayDetail
       .filter((item) => {
         const target = Array.isArray(item.jsonList) && item.jsonList[0];
@@ -112,7 +111,19 @@ async function onHandleData() {
         return true;
       })
       .map((item) => {
-        return item.jsonList[0];
+        const target = item.jsonList[0];
+        /** 工作日 */
+        if (target.datetypename === "工作日") {
+          if ((!target.sb_dk_time || !target.xb_dk_time) && ignoreForgetDK) {
+            target.sb_dk_time = `${target.work_day} 09:00:00`;
+            target.xb_dk_time = `${target.work_day} 18:00:00`;
+            target.ignoreForgetDK = true;
+          }
+        }
+        if (target.bc_name === "休息") {
+          target.isFreeDay = true;
+        }
+        return target;
       });
 
     const {
@@ -135,6 +146,7 @@ async function onHandleData() {
     });
 
     return {
+      month,
       renderMinText,
       renderHourText,
       exportExcelData,
@@ -149,7 +161,7 @@ async function onHandleData() {
 chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
   if (args.type == "run") {
     onHandleData().then((res) => {
-      downloadExcel(res.exportExcelData);
+      downloadExcel(res.exportExcelData, res.month);
     });
   }
   if (args.type == "calc") {

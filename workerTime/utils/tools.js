@@ -20,7 +20,7 @@ export function calcWorkerTimeByDay(
   begin,
   end,
   workDay,
-  { DAY_WORKER_TIME, DAY_WORKER_MINUTE, IS_FREE_DAY }
+  { DAY_WORKER_TIME, DAY_WORKER_MINUTE, IS_FREE_DAY, IGNORE_FORGET_DK }
 ) {
   const dayFormat = ["日", "一", "二", "三", "四", "五", "六"];
   const startTimeInfo = formatTime(begin);
@@ -34,6 +34,8 @@ export function calcWorkerTimeByDay(
 
   if (!startTimeInfo || !endTimeInfo) {
     return {
+      /** 是否将忘记打卡内容计入工时 */
+      ignoreForgetDK: IGNORE_FORGET_DK,
       /** 是否休息日来上班 */
       isFreeDay: IS_FREE_DAY,
       originDay: workDay,
@@ -59,6 +61,8 @@ export function calcWorkerTimeByDay(
   const minutes = duration.as("minutes");
   const hour = duration.as("hours");
   return {
+    /** 是否将忘记打卡内容计入工时 */
+    ignoreForgetDK: IGNORE_FORGET_DK,
     /** 是否休息日来上班 */
     isFreeDay: IS_FREE_DAY,
     /** 日期 */
@@ -98,14 +102,15 @@ export function formatExportExcelData(
       {
         DAY_WORKER_TIME,
         DAY_WORKER_MINUTE,
-        IS_FREE_DAY: item.bc_name === "休息",
+        IS_FREE_DAY: item.isFreeDay,
+        IGNORE_FORGET_DK: item.ignoreForgetDK,
       }
     );
   });
 
   /** 纯粹的报表数据 */
   const formatTimeData = originData.map(
-    ({ originDay, weekNumber, isFreeDay, ...rest }) => rest
+    ({ originDay, weekNumber, isFreeDay, ignoreForgetDK, ...rest }) => rest
   );
 
   /** 周数据归并处理 */
@@ -218,7 +223,7 @@ export function convertKeys(list) {
   );
 }
 
-export function downloadExcel(rowData) {
+export function downloadExcel(rowData, month) {
   const formatData = convertKeys(rowData);
 
   const worksheet = XLSX.utils.json_to_sheet(formatData);
@@ -226,10 +231,6 @@ export function downloadExcel(rowData) {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
 
   const HEADER_List = [...Object.values(TABLE_HEADER_MAP)];
-
-  console.log(formatData);
-  console.log(rowData);
-  console.log(HEADER_List);
 
   /* fix headers */
   XLSX.utils.sheet_add_aoa(worksheet, [HEADER_List], {
@@ -240,5 +241,11 @@ export function downloadExcel(rowData) {
   worksheet["!cols"] = HEADER_List.map(() => ({ wch: 24 }));
 
   /* create an XLSX file and try to save to Presidents.xlsx */
-  XLSX.writeFile(workbook, "本月工时.xlsx", { compression: true });
+  XLSX.writeFile(
+    workbook,
+    `${dayjs()
+      .month(month - 1)
+      .format("YYYY-MM")}工时.xlsx`,
+    { compression: true }
+  );
 }

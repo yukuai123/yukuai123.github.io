@@ -17,6 +17,8 @@ function load() {
   const calcContent = document.getElementById("calcContent");
   /** 在线按钮 */
   const calcOnline = document.getElementById("calcOnline");
+  /** 是否忽略未打卡时间 */
+  const ignoreForgetDK = document.getElementById("ignoreForgetDK");
 
   btn.onclick = () => chromeRuntimeSendMessage({ type: "start" });
 
@@ -40,8 +42,13 @@ function load() {
   const initConfig = async () => {
     let defaultMonth = Number(new Date().getMonth()) + 1;
     let defaultIncludeDay = false;
+    let defaultIgnoreForgetDK = false;
 
-    const { month, includeDay: storeIncludeDay } = await Storage.get();
+    const {
+      month,
+      includeDay: storeIncludeDay,
+      ignoreForgetDK: storeIgnoreForgetDK,
+    } = await Storage.get();
 
     if (month !== undefined) {
       defaultMonth = month;
@@ -51,20 +58,28 @@ function load() {
       defaultIncludeDay = storeIncludeDay;
     }
 
+    if (storeIgnoreForgetDK !== undefined) {
+      defaultIgnoreForgetDK = storeIgnoreForgetDK;
+    }
+
     select.value = defaultMonth;
     includeDay.checked = defaultIncludeDay;
+    ignoreForgetDK.checked = defaultIgnoreForgetDK;
 
     Storage.update("month", defaultMonth);
     Storage.update("includeDay", defaultIncludeDay);
+    Storage.update("ignoreForgetDK", defaultIgnoreForgetDK);
 
     select.onchange = (e) => Storage.update("month", e.target.value);
     includeDay.onchange = (e) => Storage.update("includeDay", e.target.checked);
+    ignoreForgetDK.onchange = (e) =>
+      Storage.update("ignoreForgetDK", e.target.checked);
   };
 
   /** 加载事件 */
   document.addEventListener("DOMContentLoaded", initConfig);
   document.addEventListener("beforeunload", () => {
-    Storage.remove(["month", "includeDay"]);
+    Storage.remove(["month", "includeDay", "ignoreForgetDK"]);
   });
 }
 

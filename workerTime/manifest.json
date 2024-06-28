@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "工时助手",
-  "version": "1.0",
-  "description": "Display a popup whenever a new tab is opened.",
+  "version": "3.0",
+  "description": "精细化管理打工人的工作时长！",
   "background": {
     "service_worker": "./js/background.js"
   },

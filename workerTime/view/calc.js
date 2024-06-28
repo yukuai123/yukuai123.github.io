@@ -1,6 +1,6 @@
 function renderTipColor(time) {
   if (Number(time) !== Number(time)) return "";
-  return time > 0 ? 'style="color:green"' : 'style="color:red"';
+  return time > 0 ? 'style="color:#00B96B"' : 'style="color:#E0282E"';
 }
 
 function renderTipText(time, afterText) {
@@ -33,7 +33,13 @@ function renderExcelData(rowData, { renderHourText, renderMinText }) {
                   .map((item) => {
                     return `
                         <tr>
-                          <td>${item.workDay}</td>
+                          <td>${item.workDay} 
+                          ${
+                            item.isFreeDay
+                              ? "<span style=`color: '#F2BD27'`>加班</span>"
+                              : ""
+                          } 
+                          </td>
                           <td>${item.hour}</td>
                           <td>${item.minutes}</td>
                           <td ${renderTipColor(item.diffHour)}>
@@ -42,8 +48,14 @@ function renderExcelData(rowData, { renderHourText, renderMinText }) {
                           <td ${renderTipColor(item.diffMins)}>
                             ${item.diffMins}
                           </td>
-                          <td>${item.startTime}</td>
-                          <td>${item.endTime}</td>
+                          <td>
+                              ${item.startTime}<br/>
+                              ${item.ignoreForgetDK ? "(忘记打卡)" : ""}
+                          </td>
+                          <td>
+                              ${item.endTime}<br/>
+                              ${item.ignoreForgetDK ? "(忘记打卡)" : ""}
+                          </td>
                           ${
                             item.rowspan > 0
                               ? `<td rowspan=${item.rowspan}>

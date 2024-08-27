@@ -20,7 +20,16 @@ export function calcWorkerTimeByDay(
   begin,
   end,
   workDay,
-  { DAY_WORKER_TIME, DAY_WORKER_MINUTE, IS_FREE_DAY, IGNORE_FORGET_DK }
+  {
+    IS_FREE_DAY,
+    DAY_WORKER_TIME,
+    DAY_WORKER_MINUTE,
+    IGNORE_FORGET_DK,
+    FORCE_FREE_END_TIME,
+    FORCE_FREE_BEGIN_TIME,
+    FORCE_FREE_TOTAL_TIME,
+    FORCE_FREE_TOTAL_MINS
+  }
 ) {
   const dayFormat = ["日", "一", "二", "三", "四", "五", "六"];
   const startTimeInfo = formatTime(begin);
@@ -51,6 +60,8 @@ export function calcWorkerTimeByDay(
       workDay: `${workDay} (星期${dayFormat[dayjs(workDay).day()]})`,
       totalDiffMins: 0,
       totalDiffHours: 0,
+      dayWorkerTime: DAY_WORKER_TIME,
+      dayWorkerMinute: DAY_WORKER_MINUTE,
     };
   }
 
@@ -87,12 +98,17 @@ export function calcWorkerTimeByDay(
     totalDiffMins: 0,
     /** 月差异工时（小时） */
     totalDiffHours: 0,
+    dayWorkerTime: DAY_WORKER_TIME,
+    dayWorkerMinute: DAY_WORKER_MINUTE,
+    forceFreeBeginTime: FORCE_FREE_BEGIN_TIME,
+    forceFreeEndTime: FORCE_FREE_END_TIME,
+    forceFreeTotalTime: FORCE_FREE_TOTAL_TIME,
+    forceFreeTotalMins: FORCE_FREE_TOTAL_MINS
   };
 }
 
 export function formatExportExcelData(
   allWorkerDayDetail,
-  { DAY_WORKER_MINUTE, DAY_WORKER_TIME }
 ) {
   const originData = allWorkerDayDetail.map((item) => {
     return calcWorkerTimeByDay(
@@ -100,18 +116,20 @@ export function formatExportExcelData(
       item.xb_dk_time || 0,
       item.work_day,
       {
-        DAY_WORKER_TIME,
-        DAY_WORKER_MINUTE,
         IS_FREE_DAY: item.isFreeDay,
+        DAY_WORKER_TIME: item.DAY_WORKER_TIME,
+        DAY_WORKER_MINUTE: item.DAY_WORKER_MINUTE,
         IGNORE_FORGET_DK: item.ignoreForgetDK,
+        FORCE_FREE_BEGIN_TIME: item.FORCE_FREE_BEGIN_TIME,
+        FORCE_FREE_END_TIME: item.FORCE_FREE_END_TIME,
+        FORCE_FREE_TOTAL_TIME: item.FORCE_FREE_TOTAL_TIME,
+        FORCE_FREE_TOTAL_MINS: item.FORCE_FREE_TOTAL_MINS,
       }
     );
   });
 
   /** 纯粹的报表数据 */
-  const formatTimeData = originData.map(
-    ({ originDay, weekNumber, isFreeDay, ignoreForgetDK, ...rest }) => rest
-  );
+  const formatTimeData = originData;
 
   /** 周数据归并处理 */
   const weekData = originData.reduce((ret, next) => {
@@ -165,21 +183,25 @@ export function formatExportExcelData(
     return item;
   });
 
-  const { totalDiffMins, totalDiffHours } = originData.reduce(
+  const { totalDiffMins, totalDiffHours, forceFreeTotalTime, forceFreeTotalMins } = originData.reduce(
     (ret, next) => {
       const forgetDK = next.hour === EMPTY_TEXT;
       let currentDiffHour = Number(next.diffHour) || 0;
       let currentDiffMins = Number(next.diffMins) || 0;
       if (forgetDK && !next.isFreeDay) {
-        currentDiffHour = -DAY_WORKER_TIME;
-        currentDiffMins = -DAY_WORKER_MINUTE;
+        currentDiffHour = -next.dayWorkerTime;
+        currentDiffMins = -next.dayWorkerMinute;
       }
 
       ret.totalDiffHours += currentDiffHour;
       ret.totalDiffMins += currentDiffMins;
+
+      ret.forceFreeTotalTime += (next.forceFreeTotalTime || 0);
+      ret.forceFreeTotalMins += (next.forceFreeTotalMins || 0);
+
       return ret;
     },
-    { totalDiffMins: 0, totalDiffHours: 0 }
+    { totalDiffMins: 0, totalDiffHours: 0, forceFreeTotalTime: 0, forceFreeTotalMins: 0 },
   );
 
   let renderHourText = "暂无数据";
@@ -199,7 +221,7 @@ export function formatExportExcelData(
     formatTimeData[0].totalDiffHours = renderHourText;
   }
 
-  return { formatTimeData, renderMinText, renderHourText, formatWeekData };
+  return { formatTimeData, renderMinText, renderHourText, formatWeekData, forceFreeTotalTime, forceFreeTotalMins };
 }
 
 const TABLE_HEADER_MAP = {
@@ -215,16 +237,17 @@ const TABLE_HEADER_MAP = {
 };
 
 export function convertKeys(list) {
-  return list.map((data) =>
-    Object.keys(data).reduce((ret, item) => {
+  return list.map((data) => {
+    return Object.keys(data).filter(item => TABLE_HEADER_MAP[item]).reduce((ret, item) => {
       ret[TABLE_HEADER_MAP[item]] = data[item];
       return ret;
     }, {})
-  );
+  });
 }
 
 export function downloadExcel(rowData, month) {
   const formatData = convertKeys(rowData);
+  console.log(formatData)
 
   const worksheet = XLSX.utils.json_to_sheet(formatData);
   const workbook = XLSX.utils.book_new();

@@ -18,8 +18,32 @@
             src: url("./zpix.woff2");
         }
 
+        .zpix-font {
+            font-family: 'Zpix', 'ZpixReviewOnline', 'Press Start 2P', cursive;
+        }
+
+        .normal-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .font-14 {
+            font-size: 14px;
+        }
+
+        .font-15 {
+            font-size: 15px;
+        }
+
+        .font-16 {
+            font-size: 16px;
+        }
+
+        .font-active {
+            color: #00B96B;
+            font-weight: bold;
+        }
+
         body {
-            font-family: 'Zpix', 'ZpixReviewOnline', 'Press Start 2P', "cursive";
             font-size: 14px;
         }
 
@@ -63,6 +87,20 @@
 
 <body>
     <div id="root" style="display: block; margin: 0 4%">
+        <div style="position: relative;">
+            <div style="position: absolute; right: 0; top: 15px; ">
+                <div id="fontChange"
+                    style="cursor: pointer; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center;">
+                    <span id="curFont" style="padding-right: 4px; font-size: 18px"></span>
+                    <img src="./images/change.svg" width="24px" />
+                </div>
+                <div id="fontSizeChange" style="display: inline-flex; row-gap: 4px; align-items: center;">
+                    <span style="font-size: 16px; cursor: pointer;" data-customkey="font-14">14px</span>
+                    <span style="padding: 0 8px; font-size: 16px; cursor: pointer;" data-customkey="font-15">15px</span>
+                    <span style="font-size: 16px; cursor: pointer;" data-customkey="font-16">16px</span>
+                </div>
+            </div>
+        </div>
         <div class="flex items-center justify-center">
             <div style="font-size: 24px; padding: 15px 0;" class="flex items-center">
                 工时助手v4.0<img src="./images/fz.svg" width="24px" />

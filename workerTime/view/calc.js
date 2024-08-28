@@ -60,7 +60,9 @@ function djs() {
     // 如果倒计时结束，清除定时器
     if (timeDifference <= 0) {
       document.querySelector("#time").innerHTML = `别卷了，回去休息！`;
-      clearInterval(countdownInterval);
+      try {
+        countdownInterval && clearInterval(countdownInterval);
+      } catch (e) {}
     }
   }
 
@@ -203,9 +205,7 @@ function renderExcelData(
   tableContentDom.innerHTML = tableContent;
 }
 
-(async () => {
-  const { excelData, ...restParams } = await chrome.storage.local.get();
-  renderExcelData(excelData, restParams);
+function showCutDownTime() {
   let clear = () => {};
   const djsHandler = () => {
     clear();
@@ -213,4 +213,93 @@ function renderExcelData(
   };
   djsHandler();
   document.addEventListener("visibilitychange", djsHandler);
+}
+
+const fontClassEnum = {
+  normal: "normal-font",
+  zpix: "zpix-font",
+};
+const fontClassText = {
+  [fontClassEnum.normal]: "普通字体",
+  [fontClassEnum.zpix]: "像素字体",
+};
+async function fontChangeControl() {
+  const { fontClass: localFontClass, ...params } =
+    await chrome.storage.local.get();
+  const fontChangeDom = document.querySelector("#fontChange");
+  const curFontDom = document.querySelector("#curFont");
+
+  const fontClass = localFontClass || fontClassEnum.normal;
+  curFontDom.innerHTML = fontClassText[fontClass];
+  document.body.classList.add(fontClass);
+
+  fontChangeDom.onclick = async () => {
+    const { fontClass: localFontClass } = await chrome.storage.local.get();
+    const fontClass = localFontClass || fontClassEnum.normal;
+
+    const curClass =
+      fontClassEnum.zpix === fontClass
+        ? fontClassEnum.normal
+        : fontClassEnum.zpix;
+
+    chrome.storage.local.set({ ...params, fontClass: curClass });
+
+    curFontDom.innerHTML = fontClassText[curClass];
+
+    fontClass && document.body.classList.remove(fontClass);
+    document.body.classList.add(curClass);
+  };
+}
+
+const fontSizeEnum = {
+  "font-14": "font-14",
+  "font-15": "font-15",
+  "font-16": "font-16",
+};
+
+async function fontSizeChangeControl() {
+  function setDomActive(activeClass) {
+    const parentDom = document.querySelector("#fontSizeChange");
+    const childrenDomList = [...parentDom.querySelectorAll("span")];
+    childrenDomList.forEach((i) => {
+      if (i.dataset.customkey !== activeClass) {
+        i.classList.remove("font-active");
+      } else {
+        i.classList.add("font-active");
+      }
+    });
+  }
+
+  function setBodyFontSize(curFontSize) {
+    document.body.classList.remove(...Object.keys(fontSizeEnum));
+    document.body.classList.add(curFontSize);
+  }
+
+  const parentDom = document.querySelector("#fontSizeChange");
+  const childrenDomList = [...parentDom.querySelectorAll("span")];
+
+  const { fontSize: localFontSize } = await chrome.storage.local.get();
+  const curFontSize = localFontSize || fontSizeEnum["font-14"];
+  setDomActive(curFontSize);
+  setBodyFontSize(curFontSize);
+
+  childrenDomList.forEach((dom) => {
+    dom.onclick = async (e) => {
+      const curFontSize = e.target.dataset.customkey;
+      const params = await chrome.storage.local.get();
+
+      setDomActive(curFontSize);
+      setBodyFontSize(curFontSize);
+
+      chrome.storage.local.set({ ...params, fontSize: curFontSize });
+    };
+  });
+}
+
+(async () => {
+  const { excelData, ...restParams } = await chrome.storage.local.get();
+  renderExcelData(excelData, restParams);
+  showCutDownTime();
+  fontChangeControl();
+  fontSizeChangeControl();
 })();

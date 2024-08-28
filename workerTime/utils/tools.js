@@ -16,6 +16,24 @@ export function formatTime(time) {
   return time ? time : 0;
 }
 
+function formatDurationToHoursAndMinutes(duration) {
+  if (!duration || typeof duration !== "number") {
+    return 0;
+  }
+
+  const msTime = Math.abs(duration);
+  const hours = Math.floor(msTime / 3600000); // 计算总小时数
+  const minutes = Math.floor((msTime % 3600000) / 60000); // 计算剩余的分钟数
+
+  if (!hours) {
+    return `${minutes}分钟`;
+  }
+  if (!minutes) {
+    return `${hours}小时`;
+  }
+  return `${hours}小时${minutes}分钟`;
+}
+
 export function calcWorkerTimeByDay(
   begin,
   end,
@@ -28,7 +46,7 @@ export function calcWorkerTimeByDay(
     FORCE_FREE_END_TIME,
     FORCE_FREE_BEGIN_TIME,
     FORCE_FREE_TOTAL_TIME,
-    FORCE_FREE_TOTAL_MINS
+    FORCE_FREE_TOTAL_MINS,
   }
 ) {
   const dayFormat = ["日", "一", "二", "三", "四", "五", "六"];
@@ -71,6 +89,9 @@ export function calcWorkerTimeByDay(
   const duration = dayjs.duration(endTime.diff(startTime));
   const minutes = duration.as("minutes");
   const hour = duration.as("hours");
+
+  const diffMins = minutes - (IS_FREE_DAY ? 0 : DAY_WORKER_MINUTE);
+  const convertDiffTime = formatDurationToHoursAndMinutes(diffMins * 60 * 1000);
   return {
     /** 是否将忘记打卡内容计入工时 */
     ignoreForgetDK: IGNORE_FORGET_DK,
@@ -89,7 +110,7 @@ export function calcWorkerTimeByDay(
     /** 日差异工时（小时） */
     diffHour: toFixed(hour - (IS_FREE_DAY ? 0 : DAY_WORKER_TIME)),
     /** 日差异工时（分钟） */
-    diffMins: toFixed(minutes - (IS_FREE_DAY ? 0 : DAY_WORKER_MINUTE)),
+    diffMins: toFixed(diffMins),
     /** 上班时间 */
     startTime: startTime.format("HH:mm"),
     /** 下班时间 */
@@ -98,18 +119,21 @@ export function calcWorkerTimeByDay(
     totalDiffMins: 0,
     /** 月差异工时（小时） */
     totalDiffHours: 0,
+    convertTime: formatDurationToHoursAndMinutes(duration.valueOf()),
+    convertDiffTime: diffMins >= 0 ? convertDiffTime : `-${convertDiffTime}`,
+    convertForceFreeTotalTime: formatDurationToHoursAndMinutes(
+      FORCE_FREE_TOTAL_MINS * 60 * 1000
+    ),
     dayWorkerTime: DAY_WORKER_TIME,
     dayWorkerMinute: DAY_WORKER_MINUTE,
     forceFreeBeginTime: FORCE_FREE_BEGIN_TIME,
     forceFreeEndTime: FORCE_FREE_END_TIME,
     forceFreeTotalTime: FORCE_FREE_TOTAL_TIME,
-    forceFreeTotalMins: FORCE_FREE_TOTAL_MINS
+    forceFreeTotalMins: FORCE_FREE_TOTAL_MINS,
   };
 }
 
-export function formatExportExcelData(
-  allWorkerDayDetail,
-) {
+export function formatExportExcelData(allWorkerDayDetail) {
   const originData = allWorkerDayDetail.map((item) => {
     return calcWorkerTimeByDay(
       item.sb_dk_time || 0,
@@ -161,6 +185,12 @@ export function formatExportExcelData(
       ret[next.weekNumber].diffWeekHour += currentDiffHour;
       ret[next.weekNumber].diffWeekMins += currentDiffMins;
     }
+    ret[next.weekNumber].convertWeekTime = formatDurationToHoursAndMinutes(
+      ret[next.weekNumber].weekMins * 60 * 1000
+    );
+    ret[next.weekNumber].convertDiffWeekTime = formatDurationToHoursAndMinutes(
+      ret[next.weekNumber].diffWeekMins * 60 * 1000
+    );
 
     return ret;
   }, {});
@@ -183,7 +213,12 @@ export function formatExportExcelData(
     return item;
   });
 
-  const { totalDiffMins, totalDiffHours, forceFreeTotalTime, forceFreeTotalMins } = originData.reduce(
+  const {
+    totalDiffMins,
+    totalDiffHours,
+    forceFreeTotalTime,
+    forceFreeTotalMins,
+  } = originData.reduce(
     (ret, next) => {
       const forgetDK = next.hour === EMPTY_TEXT;
       let currentDiffHour = Number(next.diffHour) || 0;
@@ -196,32 +231,58 @@ export function formatExportExcelData(
       ret.totalDiffHours += currentDiffHour;
       ret.totalDiffMins += currentDiffMins;
 
-      ret.forceFreeTotalTime += (next.forceFreeTotalTime || 0);
-      ret.forceFreeTotalMins += (next.forceFreeTotalMins || 0);
+      ret.forceFreeTotalTime += next.forceFreeTotalTime || 0;
+      ret.forceFreeTotalMins += next.forceFreeTotalMins || 0;
 
       return ret;
     },
-    { totalDiffMins: 0, totalDiffHours: 0, forceFreeTotalTime: 0, forceFreeTotalMins: 0 },
+    {
+      totalDiffMins: 0,
+      totalDiffHours: 0,
+      forceFreeTotalTime: 0,
+      forceFreeTotalMins: 0,
+    }
+  );
+
+  const totalDiffMs = totalDiffMins * 60 * 1000;
+  const totalForceFreeTotalMs = forceFreeTotalMins * 60 * 1000;
+  const convertDiffTime = formatDurationToHoursAndMinutes(totalDiffMs);
+  const convertForceFreeTotalMins = formatDurationToHoursAndMinutes(
+    totalForceFreeTotalMs
   );
 
   let renderHourText = "暂无数据";
   let renderMinText = "暂无数据";
+  let renderConvertTimeText = "暂无数据";
   if (formatTimeData.length) {
     if (totalDiffHours > 0) {
       renderMinText = `可以调休${toFixed(totalDiffMins)}分钟`;
       renderHourText = `可以调休${toFixed(totalDiffHours)}小时`;
+      renderConvertTimeText = `可以调休 ${convertDiffTime}`;
     } else if (totalDiffHours < 0) {
       renderMinText = `工时不足${Number(toFixed(totalDiffMins))}分钟`;
       renderHourText = `工时不足${Number(toFixed(totalDiffHours))}小时`;
+      renderConvertTimeText = `工时不足 ${convertDiffTime}`;
     } else {
       renderMinText = `时间管理大师！ 正常上下班即可。`;
       renderHourText = `时间管理大师！ 正常上下班即可。`;
+      renderConvertTimeText = `时间管理大师！ 正常上下班即可。`;
     }
     formatTimeData[0].totalDiffMins = renderMinText;
     formatTimeData[0].totalDiffHours = renderHourText;
   }
 
-  return { formatTimeData, renderMinText, renderHourText, formatWeekData, forceFreeTotalTime, forceFreeTotalMins };
+  return {
+    renderConvertTimeText,
+    convertDiffTime,
+    formatTimeData,
+    renderMinText,
+    renderHourText,
+    formatWeekData,
+    forceFreeTotalTime,
+    forceFreeTotalMins,
+    convertForceFreeTotalMins,
+  };
 }
 
 const TABLE_HEADER_MAP = {
@@ -238,16 +299,17 @@ const TABLE_HEADER_MAP = {
 
 export function convertKeys(list) {
   return list.map((data) => {
-    return Object.keys(data).filter(item => TABLE_HEADER_MAP[item]).reduce((ret, item) => {
-      ret[TABLE_HEADER_MAP[item]] = data[item];
-      return ret;
-    }, {})
+    return Object.keys(data)
+      .filter((item) => TABLE_HEADER_MAP[item])
+      .reduce((ret, item) => {
+        ret[TABLE_HEADER_MAP[item]] = data[item];
+        return ret;
+      }, {});
   });
 }
 
 export function downloadExcel(rowData, month) {
   const formatData = convertKeys(rowData);
-  console.log(formatData)
 
   const worksheet = XLSX.utils.json_to_sheet(formatData);
   const workbook = XLSX.utils.book_new();

@@ -194,6 +194,7 @@ async function onHandleData() {
       formatTimeData: exportExcelData,
       forceFreeTotalMins,
       forceFreeTotalTime,
+      ...restParams
     } = formatExportExcelData(allWorkerDayDetail);
 
     /** 更新存储中的数据 */
@@ -205,6 +206,7 @@ async function onHandleData() {
       forceFreeTotalMins,
       forceFreeTotalTime,
       updateTime: dayjs().valueOf(),
+      ...restParams,
     });
 
     return {
@@ -215,6 +217,7 @@ async function onHandleData() {
       formatWeekData,
       forceFreeTotalMins,
       forceFreeTotalTime,
+      ...restParams,
     };
   } catch (e) {
     console.log(e, "error");

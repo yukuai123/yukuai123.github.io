@@ -29,9 +29,11 @@ const getCurrentWorkerTime = (date) => {
   let SB_BEGIN_TIME = "09:00:00";
   let SB_END_TIME = "18:00:00";
 
-
   /** 8.26实行7.5小时工作制 */
-  if (dayjs(date).endOf("d").valueOf() > dayjs("2024-08-26").startOf("d").valueOf()) {
+  if (
+    dayjs(date).endOf("d").valueOf() >
+    dayjs("2024-08-26").startOf("d").valueOf()
+  ) {
     DAY_WORKER_TIME = 8.5;
     DAY_WORKER_MINUTE = DAY_WORKER_TIME * 60;
     SB_END_TIME = "17:30:00";
@@ -46,8 +48,8 @@ const getCurrentWorkerTime = (date) => {
     SB_END_TIME,
     /** 默认上班时间 */
     SB_BEGIN_TIME,
-  }
-}
+  };
+};
 
 let cacheParams = {};
 const useCacheTime = (time, currentParams) => {
@@ -150,7 +152,6 @@ async function onHandleData() {
           target.originXbBeginDate = target.xb_dk_time;
 
           if ((!target.sb_dk_time || !target.xb_dk_time) && ignoreForgetDK) {
-
             target.sb_dk_time =
               target.sb_dk_time || `${target.work_day} ${SB_BEGIN_TIME}`;
             target.xb_dk_time =
@@ -169,17 +170,27 @@ async function onHandleData() {
           const sbBeginDate = dayjs(target.originSbBeginDate);
           const xbBeginDate = dayjs(target.originXbBeginDate);
 
-          target.FORCE_FREE_BEGIN_TIME = dayjs(target.begin_date_time).format("HH:mm");
-          target.FORCE_FREE_END_TIME = dayjs(target.end_date_time).format("HH:mm");
+          target.FORCE_FREE_BEGIN_TIME = dayjs(target.begin_date_time).format(
+            "HH:mm"
+          );
+          target.FORCE_FREE_END_TIME = dayjs(target.end_date_time).format(
+            "HH:mm"
+          );
           target.FORCE_FREE_TOTAL_TIME = target.abnormal_minute / 60;
           target.FORCE_FREE_TOTAL_MINS = target.abnormal_minute;
 
           /** 如果请假时间比上班时间晚 并且没打上班卡，那么使用请假时间作为上班时间 */
-          if (!target.originSbBeginDate || target.originSbBeginDate && sbBeginDate.isAfter(beginDate)) {
+          if (
+            !target.originSbBeginDate ||
+            (target.originSbBeginDate && sbBeginDate.isAfter(beginDate))
+          ) {
             target.sb_dk_time = target.begin_date_time;
           }
           /** 如果请假时间比下班时间晚 或者 没打下班卡，那么使用请假时间作为下班时间 */
-          if (!target.originXbBeginDate || target.originXbBeginDate && endDate.isAfter(xbBeginDate)) {
+          if (
+            !target.originXbBeginDate ||
+            (target.originXbBeginDate && endDate.isAfter(xbBeginDate))
+          ) {
             target.xb_dk_time = target.end_date_time;
           }
         }

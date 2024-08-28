@@ -204,7 +204,7 @@ function renderExcelData(
 }
 
 (async () => {
-  const { excelData, ...restParams } = await chrome.storage.sync.get();
+  const { excelData, ...restParams } = await chrome.storage.local.get();
   renderExcelData(excelData, restParams);
   let clear = () => {};
   const djsHandler = () => {

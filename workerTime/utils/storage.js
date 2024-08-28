@@ -2,13 +2,13 @@
 export default class Storage {
   /** 批量更新 */
   static set(items) {
-    return chrome.storage.sync.set(items);
+    return chrome.storage.local.set(items);
   }
 
   static update(key, value) {
     return new Promise((resolve, reject) => {
-      chrome.storage.sync.get().then((res) => {
-        chrome.storage.sync
+      chrome.storage.local.get().then((res) => {
+        chrome.storage.local
           .set({ ...res, [key]: value })
           .then(resolve)
           .catch(reject);
@@ -18,8 +18,8 @@ export default class Storage {
 
   static updateBatch(items) {
     return new Promise((resolve, reject) => {
-      chrome.storage.sync.get().then((res) => {
-        chrome.storage.sync
+      chrome.storage.local.get().then((res) => {
+        chrome.storage.local
           .set({ ...res, ...items })
           .then(resolve)
           .catch(reject);
@@ -28,12 +28,12 @@ export default class Storage {
   }
 
   static get() {
-    return chrome.storage.sync.get();
+    return chrome.storage.local.get();
   }
 
   static getItem(key) {
     return new Promise((resolve, reject) => {
-      chrome.storage.sync
+      chrome.storage.local
         .get()
         .then((res) => {
           resolve((res || {})[key]);
@@ -43,10 +43,10 @@ export default class Storage {
   }
 
   static remove(keys) {
-    return chrome.storage.sync.remove(keys);
+    return chrome.storage.local.remove(keys);
   }
 
   static clear() {
-    return chrome.storage.sync.clear();
+    return chrome.storage.local.clear();
   }
 }

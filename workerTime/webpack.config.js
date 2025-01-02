@@ -9,6 +9,7 @@ module.exports = {
     popup: "./js/popup.js",
     content: "./js/content.js",
     background: "./js/background.js",
+    autoViewTable: "./js/autoViewTable.js",
   },
   output: {
     clean: true,

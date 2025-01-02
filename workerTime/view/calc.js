@@ -144,18 +144,22 @@ function renderExcelData(
                             }
                           </td>
                           <td>
-                            ${item.convertTime}
+                            ${item.convertTime || 0}
                           </td>
                           <td>
                             ${item.hour}(h)<br />
                             ${item.minutes}(mins)
                           </td>
                           <td ${renderTipColor(item.diffHour)}>
-                            ${item.convertDiffTime}
+                            ${item.convertDiffTime || 0}
                           </td>
                           <td>
                             ${item.startTime}<br/>
-                            ${item.ignoreForgetDK ? "(忘记打卡)" : ""}
+                            ${
+                              item.ignoreForgetDK && item.missDKType === 1
+                                ? "(忘记打卡)"
+                                : ""
+                            }
                             ${
                               item.forceFreeBeginTime
                                 ? `<br />${item.forceFreeBeginTime}(请假)`
@@ -164,7 +168,11 @@ function renderExcelData(
                           </td>
                           <td>
                             ${item.endTime}<br/>
-                            ${item.ignoreForgetDK ? "(忘记打卡)" : ""}
+                            ${
+                              item.ignoreForgetDK && item.missDKType === 2
+                                ? "(忘记打卡)"
+                                : ""
+                            }
                             ${
                               item.forceFreeBeginTime
                                 ? `<br />${item.forceFreeEndTime}(请假)`

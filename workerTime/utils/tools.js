@@ -40,6 +40,7 @@ export function calcWorkerTimeByDay(
   workDay,
   {
     IS_FREE_DAY,
+    MISS_DK_TYPE,
     DAY_WORKER_TIME,
     DAY_WORKER_MINUTE,
     IGNORE_FORGET_DK,
@@ -59,6 +60,7 @@ export function calcWorkerTimeByDay(
       ? dayjs(workDay).week() - 1
       : dayjs(workDay).week();
 
+  // 是否漏打卡
   if (!startTimeInfo || !endTimeInfo) {
     return {
       /** 是否将忘记打卡内容计入工时 */
@@ -80,6 +82,7 @@ export function calcWorkerTimeByDay(
       totalDiffHours: 0,
       dayWorkerTime: DAY_WORKER_TIME,
       dayWorkerMinute: DAY_WORKER_MINUTE,
+      missDKType: MISS_DK_TYPE,
     };
   }
 
@@ -119,17 +122,28 @@ export function calcWorkerTimeByDay(
     totalDiffMins: 0,
     /** 月差异工时（小时） */
     totalDiffHours: 0,
+    /** 工作时长 */
     convertTime: formatDurationToHoursAndMinutes(duration.valueOf()),
+    /** 差异时长 */
     convertDiffTime: diffMins >= 0 ? convertDiffTime : `-${convertDiffTime}`,
+    /** 请假时长 */
     convertForceFreeTotalTime: formatDurationToHoursAndMinutes(
       FORCE_FREE_TOTAL_MINS * 60 * 1000
     ),
+    /** 日工时(小时) */
     dayWorkerTime: DAY_WORKER_TIME,
+    /** 日工时(分钟) */
     dayWorkerMinute: DAY_WORKER_MINUTE,
+    /** 请假开始时间 */
     forceFreeBeginTime: FORCE_FREE_BEGIN_TIME,
+    /** 请假结束时间 */
     forceFreeEndTime: FORCE_FREE_END_TIME,
+    /** 请假总时间 */
     forceFreeTotalTime: FORCE_FREE_TOTAL_TIME,
+    /** 请假总分钟 */
     forceFreeTotalMins: FORCE_FREE_TOTAL_MINS,
+    /** 漏打卡类型 */
+    missDKType: MISS_DK_TYPE,
   };
 }
 
@@ -148,6 +162,7 @@ export function formatExportExcelData(allWorkerDayDetail) {
         FORCE_FREE_END_TIME: item.FORCE_FREE_END_TIME,
         FORCE_FREE_TOTAL_TIME: item.FORCE_FREE_TOTAL_TIME,
         FORCE_FREE_TOTAL_MINS: item.FORCE_FREE_TOTAL_MINS,
+        MISS_DK_TYPE: item.missDKType,
       }
     );
   });
@@ -333,4 +348,17 @@ export function downloadExcel(rowData, month) {
       .format("YYYY-MM")}工时.xlsx`,
     { compression: true }
   );
+}
+
+export function genYearList() {
+  const year = dayjs().year();
+  const startYear = 2024;
+
+  const range = Array(year - startYear).reduce((ret, next) => {
+    ret.push(startYear + next.length + 1);
+
+    return ret;
+  }, []);
+
+  return [startYear, ...range, year];
 }

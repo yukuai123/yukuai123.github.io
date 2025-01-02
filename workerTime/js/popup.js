@@ -1,12 +1,25 @@
 import Storage from "../utils/storage";
 import { AUTH_LINK } from "../utils/consts";
 import { chromeRuntimeSendMessage } from "../utils/native";
+import { genYearList } from "../utils/tools";
+
+function genYearOptions() {
+  const yearList = genYearList();
+  const selectYear = document.getElementById("selectedYear");
+
+  yearList.forEach((year) => {
+    const option = document.createElement("option");
+    option.value = year;
+    option.text = year;
+    selectYear.appendChild(option);
+  });
+}
 
 function load() {
   /** 导出报表 */
-  const btn = document.getElementById("submit");
+  const exportExcelBtn = document.getElementById("submit");
   /** 选择月份 */
-  const select = document.getElementById("selectedMonth");
+  const selectMonth = document.getElementById("selectedMonth");
   /** 是否包含今天内容 */
   const includeDay = document.getElementById("includesDay");
   /** 授权链接按钮 */
@@ -15,44 +28,64 @@ function load() {
   const calcBtn = document.getElementById("calc");
   /** 渲染在popup.html上时长的内容 */
   const calcContent = document.getElementById("calcContent");
-  /** 在线按钮 */
+  /** 在线查看报表按钮 */
   const calcOnline = document.getElementById("calcOnline");
   /** 是否忽略未打卡时间 */
   const ignoreForgetDK = document.getElementById("ignoreForgetDK");
+  /** 是否自动打开报表 */
+  const autoOpen = document.getElementById("autoOpenTable");
+  /** 年份选择 */
+  const selectYear = document.getElementById("selectedYear");
+  /** loading */
+  const loading = document.getElementById("loading");
 
-  btn.onclick = () => chromeRuntimeSendMessage({ type: "start" });
+  genYearOptions();
+
+  exportExcelBtn.onclick = () => {
+    loading.style.display = "flex";
+    chromeRuntimeSendMessage({ type: "exportExcel" }, () => {
+      loading.style.display = "none";
+    });
+  };
 
   calcBtn.onclick = () => {
+    loading.style.display = "flex";
     chromeRuntimeSendMessage(
       {
         type: "calc",
       },
       (data) => {
+        loading.style.display = "none";
         const payload = data.payload || {};
         calcContent.innerHTML = `<div>${payload.renderHourText}</div><div>${payload.renderMinText}</div>`;
       }
     );
   };
 
-  calcOnline.onclick = () => chromeRuntimeSendMessage({ type: "calcOnline" });
+  calcOnline.onclick = () => {
+    loading.style.display = "flex";
+    chromeRuntimeSendMessage({ type: "calcOnline" }, () => {
+      loading.style.display = "none";
+    });
+  };
 
   link.onclick = () => window.open(AUTH_LINK);
 
   /** 初始化配置 */
   const initConfig = async () => {
     let defaultMonth = Number(new Date().getMonth()) + 1;
+    let defaultYear = Number(new Date().getFullYear());
     let defaultIncludeDay = false;
     let defaultIgnoreForgetDK = false;
+    let defaultAutoOpenTable = false;
 
     const {
-      month,
+      month: storeMonth,
+      year: storeYear,
       includeDay: storeIncludeDay,
       ignoreForgetDK: storeIgnoreForgetDK,
+      autoOpenTable: storeAutoOpenTable,
     } = await Storage.get();
-
-    if (month !== undefined) {
-      defaultMonth = month;
-    }
 
     if (storeIncludeDay !== undefined) {
       defaultIncludeDay = storeIncludeDay;
@@ -62,24 +95,44 @@ function load() {
       defaultIgnoreForgetDK = storeIgnoreForgetDK;
     }
 
-    select.value = defaultMonth;
+    if (storeAutoOpenTable !== undefined) {
+      defaultAutoOpenTable = storeAutoOpenTable;
+    }
+
+    if (storeMonth !== undefined) {
+      defaultMonth = storeMonth;
+    }
+
+    if (storeYear !== undefined) {
+      defaultYear = storeYear;
+    }
+
+    selectMonth.value = defaultMonth;
+    selectYear.value = defaultYear;
     includeDay.checked = defaultIncludeDay;
     ignoreForgetDK.checked = defaultIgnoreForgetDK;
+    autoOpenTable.checked = defaultAutoOpenTable;
 
     Storage.update("month", defaultMonth);
+    Storage.update("year", defaultYear);
     Storage.update("includeDay", defaultIncludeDay);
     Storage.update("ignoreForgetDK", defaultIgnoreForgetDK);
+    Storage.update("autoOpenTable", defaultAutoOpenTable);
 
-    select.onchange = (e) => Storage.update("month", e.target.value);
+    selectMonth.onchange = (e) => Storage.update("month", e.target.value);
     includeDay.onchange = (e) => Storage.update("includeDay", e.target.checked);
     ignoreForgetDK.onchange = (e) =>
       Storage.update("ignoreForgetDK", e.target.checked);
+    autoOpen.onchange = (e) =>
+      Storage.update("autoOpenTable", e.target.checked);
+
+    selectedYear.onchange = (e) => Storage.update("year", e.target.value);
   };
 
   /** 加载事件 */
   document.addEventListener("DOMContentLoaded", initConfig);
   document.addEventListener("beforeunload", () => {
-    Storage.remove(["month", "includeDay", "ignoreForgetDK"]);
+    Storage.remove(["includeDay", "ignoreForgetDK", "autoOpenTable"]);
   });
 }
 

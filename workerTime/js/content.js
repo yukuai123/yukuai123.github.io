@@ -3,6 +3,7 @@ import { default as duration } from "dayjs/plugin/duration";
 import { default as weekOfYear } from "dayjs/plugin/weekOfYear";
 import { default as updateLocale } from "dayjs/plugin/updateLocale";
 import { default as localeData } from "dayjs/plugin/localeData";
+import { AUTH_LINK } from "../utils/consts";
 
 import Storage from "../utils/storage";
 import { downloadExcel, formatExportExcelData } from "../utils/tools";
@@ -51,44 +52,9 @@ const getCurrentWorkerTime = (date) => {
   };
 };
 
-let cacheParams = {};
-const useCacheTime = (time, currentParams) => {
-  /** 一分钟以内的请求，请求参数相同 视为相同请求, 直接从缓存中取数 */
-  const oneMins = 60 * 1000;
-  const now = dayjs().valueOf();
-
-  if (
-    !time ||
-    !Object.keys(cacheParams).length ||
-    !Object.keys(currentParams).length
-  ) {
-    return false;
-  }
-
-  if (
-    now - time < oneMins &&
-    JSON.stringify(currentParams) === JSON.stringify(cacheParams)
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-async function onHandleData() {
+export async function onHandleData() {
   try {
-    const { month, includeDay, updateTime, ignoreForgetDK, ...rest } =
-      await Storage.get();
-
-    const currentParams = { month, includeDay, ignoreForgetDK };
-    const allowCache = useCacheTime(updateTime, currentParams);
-
-    if (allowCache) {
-      cacheParams = currentParams;
-      return { ...rest, month };
-    } else {
-      cacheParams = currentParams;
-    }
+    const { month, includeDay, ignoreForgetDK, year } = await Storage.get();
 
     const { userId, staffId } = await queryUserInfo();
 
@@ -96,10 +62,12 @@ async function onHandleData() {
       staff_id: staffId,
       userId,
       begin: dayjs()
+        .set("year", year)
         .set("month", month - 1)
         .startOf("month")
         .format("YYYY-MM-DD"),
       end: dayjs()
+        .set("year", year)
         .set("month", month - 1)
         .endOf("month")
         .format("YYYY-MM-DD"),
@@ -157,6 +125,7 @@ async function onHandleData() {
             target.xb_dk_time =
               target.xb_dk_time || `${target.work_day} ${SB_END_TIME}`;
             target.ignoreForgetDK = true;
+            target.missDKType = !target.sb_dk_time ? 1 : 2; // 漏打卡类型 1 上班 2 下班
           }
         }
         if (target.bc_name === "休息") {
@@ -210,13 +179,13 @@ async function onHandleData() {
 
     /** 更新存储中的数据 */
     await Storage.updateBatch({
-      excelData: formatWeekData,
-      renderMinText,
-      renderHourText,
-      exportExcelData,
-      forceFreeTotalMins,
-      forceFreeTotalTime,
-      updateTime: dayjs().valueOf(),
+      excelData: formatWeekData, // 格式化好的在线报表数据（包含周维度信息
+      renderMinText, // 总分钟数
+      renderHourText, // 总小时数
+      exportExcelData, // 导出excel数据
+      forceFreeTotalMins, // 强制休息总分钟数
+      forceFreeTotalTime, // 强制休息总小时数
+      updateTime: dayjs().valueOf(), // 更新时间
       ...restParams,
     });
 
@@ -237,9 +206,13 @@ async function onHandleData() {
 
 // content.js
 chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
-  if (args.type == "run") {
+  if (args.type == "openAuth") {
+    window.open(AUTH_LINK);
+  }
+  if (args.type == "exportExcel") {
     onHandleData().then((res) => {
       downloadExcel(res.exportExcelData, res.month);
+      sendResponse();
     });
   }
   if (args.type == "calc") {

@@ -9,7 +9,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["./js/autoViewTable.js"]
+      "js": ["./js/autoViewTable.js", "./js/content.js"]
     }
   ],
   "host_permissions": ["<all_urls>"],

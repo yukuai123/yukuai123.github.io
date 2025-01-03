@@ -70,6 +70,35 @@ export function isExistValidTab() {
   });
 }
 
+export const queryAuthTabId = () => {
+  return new Promise((resolve) => {
+    chrome.tabs.query({}).then((tabs) => {
+      const list = tabs.filter((item) => {
+        if (validURL(item.url)) {
+          const url = new URL(item.url);
+          return EFFECT_HOSTS.some((host) => url.host.includes(host));
+        }
+      });
+
+      resolve(list[0] || null);
+    });
+  });
+};
+
+export const closeChromeTab = (tabId) => {
+  return new Promise((resolve) => {
+    chrome.tabs.remove(tabId, resolve);
+  });
+};
+
+export const closeAuthTab = () => {
+  return queryAuthTabId().then((tab) => {
+    if (tab) {
+      closeChromeTab(tab.id);
+    }
+  });
+};
+
 //  动态注入content.js
 export async function injectContentJs(tab) {
   // 只给合法的url注入js

@@ -1,8 +1,9 @@
 import {
-  injectContentJs,
+  closeAuthTab,
   closeChromeViewPage,
   chromeTabsSendMessage,
   queryChromeActiveTabId,
+  injectContentJs,
 } from "../utils/native";
 
 async function handler(type, payload, sendResponse) {
@@ -54,28 +55,22 @@ async function handler(type, payload, sendResponse) {
       });
       break;
     }
+    case "tokenExpired": {
+      closeAuthTab();
+      chromeTabsSendMessage(id, { type: "openAuth" });
+      break;
+    }
   }
 }
 
-chrome.tabs.onCreated.addListener((tab) => {
-  injectContentJs(tab);
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.type) {
+    handler(request.type, request.payload, sendResponse);
+  }
+
+  return true;
 });
 
-chrome.tabs.onAttached.addListener((tab) => {
-  injectContentJs(tab);
-});
-
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(function () {
   injectContentJs();
-  chrome.runtime.onMessage.addListener(function (
-    request,
-    sender,
-    sendResponse
-  ) {
-    if (request.type) {
-      handler(request.type, request.payload, sendResponse);
-    }
-
-    return true;
-  });
 });

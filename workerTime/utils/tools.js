@@ -364,5 +364,6 @@ export function genYearList() {
 }
 
 export function validURL(url) {
-  return url.startsWith("http") || url.startsWith("https");
+  if (!url) return false;
+  return url?.startsWith("http") || url?.startsWith("https");
 }

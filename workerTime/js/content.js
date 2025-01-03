@@ -204,37 +204,43 @@ export async function onHandleData() {
   }
 }
 
-// content.js
-chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
-  if (args.type == "openAuth") {
-    window.open(AUTH_LINK);
-  }
-  if (args.type == "exportExcel") {
-    onHandleData().then((res) => {
-      downloadExcel(res.exportExcelData, res.month);
-      sendResponse();
-    });
-  }
-  if (args.type == "calc") {
-    onHandleData().then((res) => {
-      sendResponse({
-        payload: {
-          type: "calc",
-          renderHourText: res.renderHourText,
-          renderMinText: res.renderMinText,
-        },
-      });
-    });
-  }
-  if (args.type == "calcOnline") {
-    onHandleData().then(() => {
-      sendResponse({
-        payload: {
-          type: "calcOnline",
-        },
-      });
-    });
-  }
+if (!window.INJECT_WORKER_TIME_FLAG) {
+  /** 页面是否被动态注入了js */
+  window.INJECT_WORKER_TIME_FLAG = true;
 
-  return true;
-});
+  alert(window.INJECT_WORKER_TIME_FLAG);
+  // content.js
+  chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
+    if (args.type == "openAuth") {
+      window.open(AUTH_LINK);
+    }
+    if (args.type == "exportExcel") {
+      onHandleData().then((res) => {
+        downloadExcel(res.exportExcelData, res.month);
+        sendResponse();
+      });
+    }
+    if (args.type == "calc") {
+      onHandleData().then((res) => {
+        sendResponse({
+          payload: {
+            type: "calc",
+            renderHourText: res.renderHourText,
+            renderMinText: res.renderMinText,
+          },
+        });
+      });
+    }
+    if (args.type == "calcOnline") {
+      onHandleData().then(() => {
+        sendResponse({
+          payload: {
+            type: "calcOnline",
+          },
+        });
+      });
+    }
+
+    return true;
+  });
+}

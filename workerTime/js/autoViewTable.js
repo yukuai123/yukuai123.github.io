@@ -7,11 +7,9 @@ Storage.get().then((res) => {
     "https://honghaioffice.tastien-external.com/"
   );
   if (res.autoOpenTable && isTargetPage) {
-    window.addEventListener("load", () => {
-      onHandleData().then(() => {
-        chrome.runtime.sendMessage({
-          type: "calcOnlineView",
-        });
+    onHandleData().then(() => {
+      chrome.runtime.sendMessage({
+        type: "calcOnlineView",
       });
     });
   }

@@ -362,3 +362,7 @@ export function genYearList() {
 
   return [startYear, ...range, year];
 }
+
+export function validURL(url) {
+  return url.startsWith("http") || url.startsWith("https");
+}

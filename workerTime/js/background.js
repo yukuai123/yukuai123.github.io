@@ -7,14 +7,16 @@ import {
 
 async function handler(type, payload, sendResponse) {
   const id = await queryChromeActiveTabId();
+
   if (!id) {
-    sendResponse();
-    const targetId = await queryChromeActiveTabId(true);
-    chromeTabsSendMessage(targetId, { type: "openAuth" });
-    const extensionId = chrome.runtime.id;
-    if (targetId === extensionId) {
-      return;
+    try {
+      sendResponse();
+      const targetId = await queryChromeActiveTabId(true);
+      chromeTabsSendMessage(targetId, { type: "openAuth" });
+    } catch (e) {
+      console.log(e, "error");
     }
+    return;
   }
   switch (type) {
     case "exportExcel": {
@@ -37,7 +39,9 @@ async function handler(type, payload, sendResponse) {
       if (id) {
         chromeTabsSendMessage(id, { type: "calcOnline" }, (data) => {
           if (data?.payload?.type === "calcOnline") {
-            chrome.tabs.create({ url: "./view/calc.html" });
+            chrome.tabs.create({
+              url: chrome.runtime.getURL("view/calc.html"),
+            });
           }
         });
       }
@@ -45,11 +49,21 @@ async function handler(type, payload, sendResponse) {
     }
     case "calcOnlineView": {
       await closeChromeViewPage();
-      chrome.tabs.create({ url: "./view/calc.html" });
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("view/calc.html"),
+      });
       break;
     }
   }
 }
+
+chrome.tabs.onCreated.addListener((tab) => {
+  injectContentJs(tab);
+});
+
+chrome.tabs.onAttached.addListener((tab) => {
+  injectContentJs(tab);
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   injectContentJs();

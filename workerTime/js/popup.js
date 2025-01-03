@@ -1,7 +1,7 @@
 import Storage from "../utils/storage";
 import { AUTH_LINK } from "../utils/consts";
-import { chromeRuntimeSendMessage } from "../utils/native";
 import { genYearList } from "../utils/tools";
+import { chromeRuntimeSendMessage, isExistValidTab } from "../utils/native";
 
 function genYearOptions() {
   const yearList = genYearList();
@@ -41,14 +41,22 @@ function load() {
 
   genYearOptions();
 
-  exportExcelBtn.onclick = () => {
+  exportExcelBtn.onclick = async () => {
+    const isExist = await isExistValidTab();
+    if (!isExist) {
+      return window.open(AUTH_LINK);
+    }
     loading.style.display = "flex";
     chromeRuntimeSendMessage({ type: "exportExcel" }, () => {
       loading.style.display = "none";
     });
   };
 
-  calcBtn.onclick = () => {
+  calcBtn.onclick = async () => {
+    const isExist = await isExistValidTab();
+    if (!isExist) {
+      return window.open(AUTH_LINK);
+    }
     loading.style.display = "flex";
     chromeRuntimeSendMessage(
       {
@@ -62,7 +70,11 @@ function load() {
     );
   };
 
-  calcOnline.onclick = () => {
+  calcOnline.onclick = async () => {
+    const isExist = await isExistValidTab();
+    if (!isExist) {
+      return window.open(AUTH_LINK);
+    }
     loading.style.display = "flex";
     chromeRuntimeSendMessage({ type: "calcOnline" }, () => {
       loading.style.display = "none";

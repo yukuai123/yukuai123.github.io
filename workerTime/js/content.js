@@ -208,7 +208,6 @@ if (!window.INJECT_WORKER_TIME_FLAG) {
   /** 页面是否被动态注入了js */
   window.INJECT_WORKER_TIME_FLAG = true;
 
-  alert(window.INJECT_WORKER_TIME_FLAG);
   // content.js
   chrome.runtime.onMessage.addListener(function (args, sender, sendResponse) {
     if (args.type == "openAuth") {

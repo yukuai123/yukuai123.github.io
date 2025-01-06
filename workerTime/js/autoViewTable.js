@@ -4,7 +4,7 @@ import Storage from "../utils/storage";
 /** 用于相响应授权完自动打开工时列表这个功能 */
 Storage.get().then((res) => {
   const isTargetPage = location.href.includes(
-    "https://honghaioffice.tastien-external.com/"
+    "https://honghaioffice.tastien-external.com/RedseaPlatform/front/mobile"
   );
 
   if (res.autoOpenTable && isTargetPage) {

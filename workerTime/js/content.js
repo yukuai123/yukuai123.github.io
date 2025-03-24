@@ -110,7 +110,7 @@ export async function onHandleData() {
       target.DAY_WORKER_MINUTE = DAY_WORKER_MINUTE;
 
       /** 工作日 */
-      if (target.datetypename === "工作日") {
+      if (target.datetypename === "工作日" && target.abnormal_name !== "外出") {
         target.originSbBeginDate = target.sb_dk_time;
         target.originXbBeginDate = target.xb_dk_time;
 
@@ -123,6 +123,7 @@ export async function onHandleData() {
           target.missDKType = !target.sb_dk_time ? 1 : 2; // 漏打卡类型 1 上班 2 下班
         }
       }
+
       if (target.bc_name === "休息") {
         target.isFreeDay = true;
       }
@@ -157,6 +158,14 @@ export async function onHandleData() {
         ) {
           target.xb_dk_time = target.end_date_time;
         }
+      }
+
+      // 外出不用打卡（默认取上下班时间）
+      if (target.abnormal_name === "外出") {
+        target.sb_dk_time =
+          target.begin_date_time || `${target.work_day} ${SB_BEGIN_TIME}`;
+        target.xb_dk_time =
+          target.end_date_time || `${target.work_day} ${SB_END_TIME}`;
       }
 
       return target;

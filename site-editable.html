@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>七（4）班学生座位表（可拖拽 + 可删除多标签 + 本地保存）</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        text-align: center;
+        padding: 18px;
+      }
+      h2 {
+        margin: 10px 0 18px;
+        color: #111;
+      }
+      .toolbar {
+        margin-bottom: 12px;
+      }
+      button {
+        padding: 8px 14px;
+        margin-right: 8px;
+        border: 0;
+        border-radius: 6px;
+        background: #1a4ea0;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #666;
+      }
+      .classroom {
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .group {
+        min-width: 260px;
+        border: 2px solid #222;
+        padding: 10px;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+      }
+      .group-title {
+        font-weight: 700;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 120px);
+        grid-auto-rows: auto;
+        gap: 8px;
+        justify-content: center;
+      }
+      .student {
+        border: 1px solid #222;
+        border-radius: 6px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        font-size: 13px;
+        cursor: grab;
+        user-select: none;
+      }
+      .student.male {
+        background: #e6f3ff;
+      }
+      .student.female {
+        background: #fff0f6;
+      }
+      .student.dragging {
+        opacity: 0.45;
+      }
+      .student.over {
+        outline: 3px dashed #1a4ea0;
+      }
+      .info {
+        font-weight: 700;
+      }
+      .sub {
+        font-size: 12px;
+        color: #333;
+        margin-top: 4px;
+      }
+      .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .tag-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 6px;
+        font-size: 11px;
+        border-radius: 12px;
+        background: #1a73e8;
+        color: #fff;
+        cursor: default;
+      }
+      .tag-item .remove {
+        font-weight: bold;
+        cursor: pointer;
+        color: #fff;
+      }
+      .tag-input {
+        font-size: 11px;
+        padding: 2px 6px;
+        min-width: 30px;
+        border: 1px dashed #aaa;
+        border-radius: 12px;
+        outline: none;
+      }
+      footer {
+        margin-top: 18px;
+        color: #666;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>七（4）班学生座位表</h2>
+
+    <div class="toolbar">
+      <button id="saveBtn">保存到本地</button>
+      <button id="clearBtn" class="secondary">清除本地记录并恢复初始</button>
+      <button id="exportBtn" class="secondary">导出 JSON（下载）</button>
+    </div>
+
+    <div class="classroom" id="classroom"></div>
+
+    <footer>
+      提示：拖拽任意学生交换位置；标签可添加/删除；保存会把位置和标签保存到浏览器
+      localStorage。
+    </footer>
+
+    <script>
+      const initialGroups = [
+        {
+          name: "第一组",
+          students: [
+            { id: "37", name: "陈言燊", sex: "male", height: 148, tag: [] },
+            { id: "30", name: "王修晟", sex: "male", height: 149, tag: [] },
+            { id: "1", name: "陈依诺", sex: "female", height: 146, tag: [] },
+            { id: "4", name: "蒋瑶萱", sex: "female", height: 152, tag: [] },
+            { id: "46", name: "陈奇楦", sex: "male", height: 158, tag: [] },
+            { id: "2", name: "林瑾辰", sex: "male", height: 157, tag: [] },
+            { id: "29", name: "陈莉丹", sex: "female", height: 152, tag: [] },
+            { id: "42", name: "阙靖芸", sex: "female", height: 154, tag: [] },
+            { id: "8", name: "叶家豪", sex: "male", height: 162, tag: [] },
+            { id: "41", name: "陈逸飞", sex: "male", height: 158, tag: [] },
+            { id: "40", name: "刘善锋", sex: "male", height: 160, tag: [] },
+            { id: "11", name: "林致仰", sex: "male", height: 162, tag: [] },
+          ],
+        },
+        {
+          name: "第二组",
+          students: [
+            { id: "15", name: "吴柏锴", sex: "male", height: 150, tag: [] },
+            { id: "48", name: "关宏阳", sex: "male", height: 149, tag: [] },
+            { id: "13", name: "陈禹辛", sex: "female", height: 152, tag: [] },
+            { id: "10", name: "余慧琳", sex: "female", height: 155, tag: [] },
+            { id: "24", name: "吴婧妍", sex: "female", height: 148, tag: [] },
+            { id: "9", name: "林子蓉", sex: "female", height: 158, tag: [] },
+            { id: "12", name: "缪鸿滔", sex: "male", height: 159, tag: [] },
+            { id: "3", name: "姚霖烨", sex: "male", height: 160, tag: [] },
+            { id: "32", name: "周彦灵", sex: "female", height: 156, tag: [] },
+            { id: "47", name: "林诗锜", sex: "female", height: 157, tag: [] },
+            { id: "20", name: "陈浩煊", sex: "male", height: 166, tag: [] },
+            { id: "34", name: "陈胤丞", sex: "male", height: 164, tag: [] },
+          ],
+        },
+        {
+          name: "第三组",
+          students: [
+            { id: "19", name: "陈枞", sex: "male", height: 150, tag: [] },
+            { id: "25", name: "陈梓鑫", sex: "male", height: 149, tag: [] },
+            { id: "36", name: "郑怡佳", sex: "female", height: 154, tag: [] },
+            { id: "31", name: "黄诗颖", sex: "female", height: 156, tag: [] },
+            { id: "17", name: "蔡振凯", sex: "male", height: 159, tag: [] },
+            { id: "28", name: "石兆锋", sex: "male", height: 154, tag: [] },
+            { id: "38", name: "周鑫媛", sex: "female", height: 157, tag: [] },
+            { id: "5", name: "鄢佳熠", sex: "female", height: 158, tag: [] },
+            { id: "21", name: "陈弈璇", sex: "female", height: 160, tag: [] },
+            { id: "22", name: "刘柳彤", sex: "female", height: 163, tag: [] },
+            { id: "43", name: "李祈耀", sex: "male", height: 153, tag: [] },
+            { id: "44", name: "彭隆杰", sex: "male", height: 155, tag: [] },
+          ],
+        },
+        {
+          name: "第四组",
+          students: [
+            { id: "27", name: "张溢华", sex: "female", height: 145, tag: [] },
+            { id: "45", name: "张之遥", sex: "female", height: 144, tag: [] },
+            { id: "6", name: "黄耀辉", sex: "male", height: 153, tag: [] },
+            { id: "7", name: "彭上根", sex: "male", height: 153, tag: [] },
+            { id: "16", name: "吴梦萱", sex: "female", height: 155, tag: [] },
+            { id: "18", name: "王钰萱", sex: "female", height: 155, tag: [] },
+            { id: "39", name: "余柳涵", sex: "female", height: 157, tag: [] },
+            { id: "14", name: "马孜璇", sex: "female", height: 158, tag: [] },
+            { id: "26", name: "雷柠华", sex: "male", height: 165, tag: [] },
+            { id: "35", name: "余根耀", sex: "male", height: 162, tag: [] },
+            { id: "23", name: "陈宏炫", sex: "male", height: 170, tag: [] },
+            { id: "33", name: "陈星龙", sex: "male", height: 171, tag: [] },
+          ],
+        },
+      ];
+
+      let groups = JSON.parse(JSON.stringify(initialGroups));
+
+      function loadSaved() {
+        const saved = localStorage.getItem("seatData");
+        if (!saved) return;
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length === initialGroups.length) {
+            groups = parsed;
+          }
+        } catch (err) {
+          console.error("解析 seatData 出错，忽略本地数据：", err);
+        }
+      }
+
+      loadSaved();
+
+      const classroom = document.getElementById("classroom");
+
+      function render() {
+        classroom.innerHTML = "";
+        groups.forEach((group) => {
+          const gEl = document.createElement("div");
+          gEl.className = "group";
+
+          const title = document.createElement("div");
+          title.className = "group-title";
+          title.textContent = group.name;
+          gEl.appendChild(title);
+
+          const grid = document.createElement("div");
+          grid.className = "grid";
+
+          group.students.forEach((stu) => {
+            const stuEl = document.createElement("div");
+            stuEl.className =
+              "student " + (stu.sex === "male" ? "male" : "female");
+            stuEl.draggable = true;
+            stuEl.dataset.id = String(stu.id);
+
+            const info = document.createElement("div");
+            info.className = "info";
+            info.innerHTML = `${stu.name}<div class="sub">${stu.id} ${stu.height}cm</div>`;
+
+            // 标签容器
+            const tagContainer = document.createElement("div");
+            tagContainer.className = "tag-container";
+
+            // 已有标签
+            (stu.tag || []).forEach((t, idx) => {
+              const tEl = createTagElement(stu, t, idx);
+              tagContainer.appendChild(tEl);
+            });
+
+            // 输入框
+            const input = document.createElement("input");
+            input.className = "tag-input";
+            input.placeholder = "添加标签";
+            input.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const val = input.value.trim();
+                if (!val) return;
+                if (!stu.tag) stu.tag = [];
+                if (stu.tag.length >= 5) {
+                  alert("最多可添加5个标签");
+                  input.value = "";
+                  return;
+                }
+                stu.tag.push(val);
+                const tEl = createTagElement(stu, val, stu.tag.length - 1);
+                tagContainer.insertBefore(tEl, input);
+                input.value = "";
+              }
+            });
+
+            tagContainer.appendChild(input);
+
+            // 拖拽
+            stuEl.addEventListener("dragstart", (e) => {
+              e.dataTransfer.setData("text/plain", String(stu.id));
+              e.dataTransfer.effectAllowed = "move";
+              stuEl.classList.add("dragging");
+            });
+            stuEl.addEventListener("dragend", () => {
+              stuEl.classList.remove("dragging");
+              document
+                .querySelectorAll(".student.over")
+                .forEach((el) => el.classList.remove("over"));
+            });
+            stuEl.addEventListener("dragover", (e) => {
+              e.preventDefault();
+              stuEl.classList.add("over");
+            });
+            stuEl.addEventListener("dragleave", () => {
+              stuEl.classList.remove("over");
+            });
+            stuEl.addEventListener("drop", (e) => {
+              e.preventDefault();
+              stuEl.classList.remove("over");
+              const fromId = e.dataTransfer.getData("text/plain");
+              const toId = stu.id;
+              if (fromId && String(fromId) !== String(toId)) {
+                swapStudents(String(fromId), String(toId));
+                render();
+              }
+            });
+
+            stuEl.appendChild(info);
+            stuEl.appendChild(tagContainer);
+            grid.appendChild(stuEl);
+          });
+
+          gEl.appendChild(grid);
+          classroom.appendChild(gEl);
+        });
+      }
+
+      function createTagElement(stu, val, idx) {
+        const tEl = document.createElement("div");
+        tEl.className = "tag-item";
+        tEl.innerText = val;
+
+        const remove = document.createElement("span");
+        remove.className = "remove";
+        remove.innerText = "×";
+        remove.addEventListener("click", () => {
+          stu.tag.splice(idx, 1);
+          render();
+        });
+
+        tEl.appendChild(remove);
+        return tEl;
+      }
+
+      function swapStudents(idA, idB) {
+        let aPos = null,
+          bPos = null;
+        for (let gi = 0; gi < groups.length; gi++) {
+          for (let si = 0; si < groups[gi].students.length; si++) {
+            const s = groups[gi].students[si];
+            if (String(s.id) === String(idA)) aPos = { gi, si };
+            if (String(s.id) === String(idB)) bPos = { gi, si };
+            if (aPos && bPos) break;
+          }
+          if (aPos && bPos) break;
+        }
+        if (aPos && bPos) {
+          const tmp = groups[aPos.gi].students[aPos.si];
+          groups[aPos.gi].students[aPos.si] = groups[bPos.gi].students[bPos.si];
+          groups[bPos.gi].students[bPos.si] = tmp;
+        }
+      }
+
+      function saveData() {
+        try {
+          localStorage.setItem("seatData", JSON.stringify(groups));
+          alert("座位表已保存到本地（localStorage）。");
+        } catch (err) {
+          alert("保存失败: " + err);
+        }
+      }
+
+      function clearSaved() {
+        if (!confirm("确认清除本地保存并恢复初始座位表？")) return;
+        localStorage.removeItem("seatData");
+        groups = JSON.parse(JSON.stringify(initialGroups));
+        render();
+        alert("已清除并恢复初始座位表。");
+      }
+
+      function exportJSON() {
+        const dataStr = JSON.stringify(groups, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "seatData.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById("saveBtn").addEventListener("click", saveData);
+      document.getElementById("clearBtn").addEventListener("click", clearSaved);
+      document
+        .getElementById("exportBtn")
+        .addEventListener("click", exportJSON);
+
+      render();
+    </script>
+  </body>
+</html>

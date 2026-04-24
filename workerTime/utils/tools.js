@@ -48,7 +48,7 @@ export function calcWorkerTimeByDay(
     FORCE_FREE_BEGIN_TIME,
     FORCE_FREE_TOTAL_TIME,
     FORCE_FREE_TOTAL_MINS,
-  }
+  },
 ) {
   const dayFormat = ["日", "一", "二", "三", "四", "五", "六"];
   const startTimeInfo = formatTime(begin);
@@ -128,7 +128,7 @@ export function calcWorkerTimeByDay(
     convertDiffTime: diffMins >= 0 ? convertDiffTime : `-${convertDiffTime}`,
     /** 请假时长 */
     convertForceFreeTotalTime: formatDurationToHoursAndMinutes(
-      FORCE_FREE_TOTAL_MINS * 60 * 1000
+      FORCE_FREE_TOTAL_MINS * 60 * 1000,
     ),
     /** 日工时(小时) */
     dayWorkerTime: DAY_WORKER_TIME,
@@ -163,12 +163,28 @@ export function formatExportExcelData(allWorkerDayDetail) {
         FORCE_FREE_TOTAL_TIME: item.FORCE_FREE_TOTAL_TIME,
         FORCE_FREE_TOTAL_MINS: item.FORCE_FREE_TOTAL_MINS,
         MISS_DK_TYPE: item.missDKType,
-      }
+      },
     );
   });
 
   /** 纯粹的报表数据 */
   const formatTimeData = originData;
+
+  function getSummaryDiffValue(dayData) {
+    const forgetDK = dayData.hour === EMPTY_TEXT;
+
+    if (forgetDK && !dayData.isFreeDay) {
+      return {
+        diffHour: -Number(dayData.dayWorkerTime || 0),
+        diffMins: -Number(dayData.dayWorkerMinute || 0),
+      };
+    }
+
+    return {
+      diffHour: dayData.diffHour !== EMPTY_TEXT ? Number(dayData.diffHour) : 0,
+      diffMins: dayData.diffMins !== EMPTY_TEXT ? Number(dayData.diffMins) : 0,
+    };
+  }
 
   /** 周数据归并处理 */
   const weekData = originData.reduce((ret, next) => {
@@ -176,10 +192,8 @@ export function formatExportExcelData(allWorkerDayDetail) {
     /** rowspan */
     const info = ret[next.weekNumber];
 
-    const currentDiffHour =
-      next.diffHour !== EMPTY_TEXT ? Number(next.diffHour) : 0;
-    const currentDiffMins =
-      next.diffMins !== EMPTY_TEXT ? Number(next.diffMins) : 0;
+    const { diffHour: currentDiffHour, diffMins: currentDiffMins } =
+      getSummaryDiffValue(next);
 
     const currentHour = next.hour !== EMPTY_TEXT ? Number(next.hour) : 0;
     const currentMins = next.minutes !== EMPTY_TEXT ? Number(next.minutes) : 0;
@@ -201,10 +215,10 @@ export function formatExportExcelData(allWorkerDayDetail) {
       ret[next.weekNumber].diffWeekMins += currentDiffMins;
     }
     ret[next.weekNumber].convertWeekTime = formatDurationToHoursAndMinutes(
-      ret[next.weekNumber].weekMins * 60 * 1000
+      ret[next.weekNumber].weekMins * 60 * 1000,
     );
     ret[next.weekNumber].convertDiffWeekTime = formatDurationToHoursAndMinutes(
-      ret[next.weekNumber].diffWeekMins * 60 * 1000
+      ret[next.weekNumber].diffWeekMins * 60 * 1000,
     );
 
     return ret;
@@ -235,13 +249,8 @@ export function formatExportExcelData(allWorkerDayDetail) {
     forceFreeTotalMins,
   } = originData.reduce(
     (ret, next) => {
-      const forgetDK = next.hour === EMPTY_TEXT;
-      let currentDiffHour = Number(next.diffHour) || 0;
-      let currentDiffMins = Number(next.diffMins) || 0;
-      if (forgetDK && !next.isFreeDay) {
-        currentDiffHour = -next.dayWorkerTime;
-        currentDiffMins = -next.dayWorkerMinute;
-      }
+      const { diffHour: currentDiffHour, diffMins: currentDiffMins } =
+        getSummaryDiffValue(next);
 
       ret.totalDiffHours += currentDiffHour;
       ret.totalDiffMins += currentDiffMins;
@@ -256,14 +265,14 @@ export function formatExportExcelData(allWorkerDayDetail) {
       totalDiffHours: 0,
       forceFreeTotalTime: 0,
       forceFreeTotalMins: 0,
-    }
+    },
   );
 
   const totalDiffMs = totalDiffMins * 60 * 1000;
   const totalForceFreeTotalMs = forceFreeTotalMins * 60 * 1000;
   const convertDiffTime = formatDurationToHoursAndMinutes(totalDiffMs);
   const convertForceFreeTotalMins = formatDurationToHoursAndMinutes(
-    totalForceFreeTotalMs
+    totalForceFreeTotalMs,
   );
 
   let renderHourText = "暂无数据";
@@ -346,7 +355,7 @@ export function downloadExcel(rowData, month) {
     `${dayjs()
       .month(month - 1)
       .format("YYYY-MM")}工时.xlsx`,
-    { compression: true }
+    { compression: true },
   );
 }
 
@@ -354,13 +363,15 @@ export function genYearList() {
   const year = dayjs().year();
   const startYear = 2024;
 
-  const range = Array(year - startYear).reduce((ret, next) => {
-    ret.push(startYear + next.length + 1);
+  const range = Array(year - startYear)
+    .fill("")
+    .reduce((ret, next, index) => {
+      ret.push(startYear + index + 1);
 
-    return ret;
-  }, []);
+      return ret;
+    }, []);
 
-  return [startYear, ...range, year];
+  return [startYear, ...range];
 }
 
 export function validURL(url) {

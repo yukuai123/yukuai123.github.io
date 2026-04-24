@@ -23,6 +23,9 @@ dayjs.updateLocale("zh-cn", {
   weekStart: 1, // 配置为周一
 });
 
+const SHORTER_WORKDAY_START_DATE = "2024-08-26";
+const NORMAL_WORKDAY_RESUME_DATE = "2026-04-01";
+
 const getCurrentWorkerTime = (date) => {
   let DAY_WORKER_TIME = 9;
   let DAY_WORKER_MINUTE = DAY_WORKER_TIME * 60;
@@ -30,10 +33,12 @@ const getCurrentWorkerTime = (date) => {
   let SB_BEGIN_TIME = "09:00:00";
   let SB_END_TIME = "18:00:00";
 
-  /** 8.26实行7.5小时工作制 */
+  /** 2024-08-26 起按 8.5 小时工作制计算 */
   if (
     dayjs(date).endOf("d").valueOf() >
-    dayjs("2024-08-26").startOf("d").valueOf()
+      dayjs(SHORTER_WORKDAY_START_DATE).startOf("d").valueOf() &&
+    dayjs(date).startOf("d").valueOf() <
+      dayjs(NORMAL_WORKDAY_RESUME_DATE).startOf("d").valueOf()
   ) {
     DAY_WORKER_TIME = 8.5;
     DAY_WORKER_MINUTE = DAY_WORKER_TIME * 60;

@@ -11,22 +11,38 @@ function renderTipText(time, afterText) {
     : `工时不足: ${time.toFixed(2)}${afterText}`;
 }
 
-function beforeChangeDate(date1) {
-  return new Date(date1).getTime() < new Date("2024-08-26").getTime();
+const SHORTER_WORKDAY_START_DATE = "2024-08-26";
+const NORMAL_WORKDAY_RESUME_DATE = "2026-04-01";
+
+function getWorkdayConfig(date = new Date()) {
+  const currentDate = new Date(date);
+  const shorterWorkdayStart = new Date(SHORTER_WORKDAY_START_DATE);
+  const normalWorkdayResume = new Date(NORMAL_WORKDAY_RESUME_DATE);
+
+  if (
+    currentDate.getTime() >= shorterWorkdayStart.getTime() &&
+    currentDate.getTime() < normalWorkdayResume.getTime()
+  ) {
+    return {
+      dayWorkTimeText: "8小时30分钟",
+      endTime: "17:30:00",
+    };
+  }
+
+  return {
+    dayWorkTimeText: "9小时",
+    endTime: "18:00:00",
+  };
 }
 
 function curDateWorkTime() {
-  if (beforeChangeDate()) {
-    return `9小时`;
-  } else {
-    return `8小时30分钟`;
-  }
+  return getWorkdayConfig().dayWorkTimeText;
 }
 
 function djs() {
   // 假设我们有一个目标时间点，以毫秒为单位
   const targetTime = new Date(
-    `${new Date().toDateString()} 17:30:00`
+    `${new Date().toDateString()} ${getWorkdayConfig().endTime}`
   ).getTime();
 
   // 获取当前时间

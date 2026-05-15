@@ -15,6 +15,7 @@
       button.secondary { background: #666; }
       .classroom { display: flex; justify-content: center; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
       .group { min-width: 260px; border: 2px solid #222; padding: 10px; border-radius: 6px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,0.06); }
+      .group.over { outline: 3px dashed #e8a000; }
       .group-title { font-weight: 700; margin-bottom: 8px; text-align: center; }
       .grid { display: grid; grid-template-columns: repeat(2, 120px); grid-auto-rows: auto; gap: 8px; justify-content: center; }
       .student { border: 1px solid #222; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; cursor: grab; user-select: none; background: #f0f4ff; }
@@ -192,11 +193,20 @@
             stuEl.addEventListener("drop", (e) => {
               e.preventDefault(); stuEl.classList.remove("over");
               const fromId = e.dataTransfer.getData("text/plain");
-              if (fromId && fromId !== stu.id) { swapStudents(fromId, stu.id); render(); }
+              if (fromId && fromId !== stu.id) { moveBeforeStudent(fromId, stu.id); render(); }
             });
             stuEl.appendChild(info);
             stuEl.appendChild(tagContainer);
             grid.appendChild(stuEl);
+          });
+          // 拖到组空白区域 → 移动到该组末尾
+          gEl.addEventListener("dragover", (e) => { e.preventDefault(); gEl.classList.add("over"); });
+          gEl.addEventListener("dragleave", (e) => { if (!gEl.contains(e.relatedTarget)) gEl.classList.remove("over"); });
+          gEl.addEventListener("drop", (e) => {
+            gEl.classList.remove("over");
+            if (e.target.closest(".student")) return; // 落在学生上由学生处理
+            const fromId = e.dataTransfer.getData("text/plain");
+            if (fromId) { moveToGroup(fromId, group.name); render(); }
           });
           gEl.appendChild(grid);
           classroom.appendChild(gEl);
@@ -214,20 +224,31 @@
         return tEl;
       }
 
-      function swapStudents(idA, idB) {
+      function findPos(id) {
         const groups = allGroups[currentClass];
-        let aPos = null, bPos = null;
-        for (let gi = 0; gi < groups.length; gi++) {
-          for (let si = 0; si < groups[gi].students.length; si++) {
-            if (groups[gi].students[si].id === idA) aPos = {gi, si};
-            if (groups[gi].students[si].id === idB) bPos = {gi, si};
-          }
-        }
-        if (aPos && bPos) {
-          const tmp = groups[aPos.gi].students[aPos.si];
-          groups[aPos.gi].students[aPos.si] = groups[bPos.gi].students[bPos.si];
-          groups[bPos.gi].students[bPos.si] = tmp;
-        }
+        for (let gi = 0; gi < groups.length; gi++)
+          for (let si = 0; si < groups[gi].students.length; si++)
+            if (groups[gi].students[si].id === id) return {gi, si};
+        return null;
+      }
+
+      function moveBeforeStudent(fromId, toId) {
+        const groups = allGroups[currentClass];
+        const from = findPos(fromId), to = findPos(toId);
+        if (!from || !to) return;
+        const [stu] = groups[from.gi].students.splice(from.si, 1);
+        const newTo = findPos(toId);
+        groups[newTo.gi].students.splice(newTo.si, 0, stu);
+      }
+
+      function moveToGroup(fromId, groupName) {
+        const groups = allGroups[currentClass];
+        const from = findPos(fromId);
+        if (!from) return;
+        const toGi = groups.findIndex(g => g.name === groupName);
+        if (toGi === -1 || toGi === from.gi) return;
+        const [stu] = groups[from.gi].students.splice(from.si, 1);
+        groups[toGi].students.push(stu);
       }
 
       document.getElementById("saveBtn").addEventListener("click", () => {

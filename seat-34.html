@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>三班四班分班座位安排</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body { font-family: "Microsoft YaHei", sans-serif; text-align: center; padding: 18px; }
+      h2 { margin: 10px 0 18px; color: #111; }
+      .toolbar { margin-bottom: 12px; }
+      .class-tabs { margin-bottom: 16px; }
+      .tab-btn { padding: 8px 20px; margin-right: 6px; border: 2px solid #1a4ea0; border-radius: 6px; background: #fff; color: #1a4ea0; cursor: pointer; font-size: 15px; }
+      .tab-btn.active { background: #1a4ea0; color: #fff; }
+      button { padding: 8px 14px; margin-right: 8px; border: 0; border-radius: 6px; background: #1a4ea0; color: #fff; cursor: pointer; }
+      button.secondary { background: #666; }
+      .classroom { display: flex; justify-content: center; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+      .group { min-width: 260px; border: 2px solid #222; padding: 10px; border-radius: 6px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,0.06); }
+      .group-title { font-weight: 700; margin-bottom: 8px; text-align: center; }
+      .grid { display: grid; grid-template-columns: repeat(2, 120px); grid-auto-rows: auto; gap: 8px; justify-content: center; }
+      .student { border: 1px solid #222; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; cursor: grab; user-select: none; background: #f0f4ff; }
+      .student.dragging { opacity: 0.45; }
+      .student.over { outline: 3px dashed #1a4ea0; }
+      .info { font-weight: 700; }
+      .sub { font-size: 12px; color: #333; margin-top: 4px; }
+      .tag-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+      .tag-item { display: flex; align-items: center; gap: 4px; padding: 2px 6px; font-size: 11px; border-radius: 12px; background: #1a73e8; color: #fff; cursor: default; }
+      .tag-item .remove { font-weight: bold; cursor: pointer; color: #fff; }
+      .tag-input { font-size: 11px; padding: 2px 6px; min-width: 30px; border: 1px dashed #aaa; border-radius: 12px; outline: none; }
+      footer { margin-top: 18px; color: #666; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <h2>三班 / 四班 分班座位安排</h2>
+
+    <div class="class-tabs">
+      <button class="tab-btn active" onclick="switchClass(0)">三班</button>
+      <button class="tab-btn" onclick="switchClass(1)">四班</button>
+    </div>
+
+    <div class="toolbar">
+      <button id="saveBtn">保存到本地</button>
+      <button id="clearBtn" class="secondary">清除并恢复初始</button>
+      <button id="exportBtn" class="secondary">导出 JSON</button>
+    </div>
+
+    <div class="classroom" id="classroom"></div>
+
+    <footer>拖拽交换位置；标签可添加/删除；保存到 localStorage。</footer>
+
+    <script>
+      const allInitial = [
+        // 三班 49人 分4组
+        [
+          { name: "第一组", students: [
+            {id:"c3_1",name:"吴思妤",tag:[]},{id:"c3_2",name:"林烨皓",tag:[]},
+            {id:"c3_3",name:"余悦豪",tag:[]},{id:"c3_4",name:"缪昊君",tag:[]},
+            {id:"c3_5",name:"鄢佳熠",tag:[]},{id:"c3_6",name:"苏梓华",tag:[]},
+            {id:"c3_7",name:"林瑾辰",tag:[]},{id:"c3_8",name:"黄耀辉",tag:[]},
+            {id:"c3_9",name:"余慧琳",tag:[]},{id:"c3_10",name:"詹思睿",tag:[]},
+            {id:"c3_11",name:"彭上根",tag:[]},{id:"c3_12",name:"林梓彤",tag:[]},
+          ]},
+          { name: "第二组", students: [
+            {id:"c3_13",name:"蒋瑶萱",tag:[]},{id:"c3_14",name:"汤若汐",tag:[]},
+            {id:"c3_15",name:"叶家豪",tag:[]},{id:"c3_16",name:"吴柏锴",tag:[]},
+            {id:"c3_17",name:"苏孔辰",tag:[]},{id:"c3_18",name:"张延恩",tag:[]},
+            {id:"c3_19",name:"黄均炜",tag:[]},{id:"c3_20",name:"吴梦萱",tag:[]},
+            {id:"c3_21",name:"陈浩煊",tag:[]},{id:"c3_22",name:"陈宏炫",tag:[]},
+            {id:"c3_23",name:"张溢华",tag:[]},{id:"c3_24",name:"陈依诺",tag:[]},
+          ]},
+          { name: "第三组", students: [
+            {id:"c3_25",name:"黄子桭",tag:[]},{id:"c3_26",name:"温若熙",tag:[]},
+            {id:"c3_27",name:"林子蓉",tag:[]},{id:"c3_28",name:"冯梓琪",tag:[]},
+            {id:"c3_29",name:"姚霖烨",tag:[]},{id:"c3_30",name:"苏可",tag:[]},
+            {id:"c3_31",name:"石墨宁",tag:[]},{id:"c3_32",name:"陈禹辛",tag:[]},
+            {id:"c3_33",name:"蒋昊拱",tag:[]},{id:"c3_34",name:"蔡振凯",tag:[]},
+            {id:"c3_35",name:"梁靖宜",tag:[]},{id:"c3_36",name:"何芷葶",tag:[]},
+          ]},
+          { name: "第四组", students: [
+            {id:"c3_37",name:"吴婧妍",tag:[]},{id:"c3_38",name:"陈博光",tag:[]},
+            {id:"c3_39",name:"余志轩",tag:[]},{id:"c3_40",name:"缪鸿滔",tag:[]},
+            {id:"c3_41",name:"陈弈璇",tag:[]},{id:"c3_42",name:"马孜璇",tag:[]},
+            {id:"c3_43",name:"叶晴仪",tag:[]},{id:"c3_44",name:"刘柳彤",tag:[]},
+            {id:"c3_45",name:"雷柠华",tag:[]},{id:"c3_46",name:"关雨欣",tag:[]},
+            {id:"c3_47",name:"周彦灵",tag:[]},{id:"c3_48",name:"陈莉丹",tag:[]},
+            {id:"c3_49",name:"章纯硕",tag:[]},
+          ]},
+        ],
+        // 四班 49人 分4组
+        [
+          { name: "第一组", students: [
+            {id:"c4_1",name:"林致仰",tag:[]},{id:"c4_2",name:"高颖鑫",tag:[]},
+            {id:"c4_3",name:"陈枞",tag:[]},{id:"c4_4",name:"林炎昊",tag:[]},
+            {id:"c4_5",name:"陈亿轩",tag:[]},{id:"c4_6",name:"王修晟",tag:[]},
+            {id:"c4_7",name:"左若霖",tag:[]},{id:"c4_8",name:"黄建羽",tag:[]},
+            {id:"c4_9",name:"王钰萱",tag:[]},{id:"c4_10",name:"杨伊",tag:[]},
+            {id:"c4_11",name:"陈胤丞",tag:[]},{id:"c4_12",name:"周鑫媛",tag:[]},
+          ]},
+          { name: "第二组", students: [
+            {id:"c4_13",name:"余根耀",tag:[]},{id:"c4_14",name:"陈梓鑫",tag:[]},
+            {id:"c4_15",name:"余柳涵",tag:[]},{id:"c4_16",name:"白昊轩",tag:[]},
+            {id:"c4_17",name:"苏晨浩",tag:[]},{id:"c4_18",name:"韩东炎",tag:[]},
+            {id:"c4_19",name:"郑怡佳",tag:[]},{id:"c4_20",name:"陈言燊",tag:[]},
+            {id:"c4_21",name:"陈劲羽",tag:[]},{id:"c4_22",name:"黄诗颖",tag:[]},
+            {id:"c4_23",name:"谢铭浩",tag:[]},{id:"c4_24",name:"周彦灵",tag:[]},
+          ]},
+          { name: "第三组", students: [
+            {id:"c4_25",name:"张芷悦",tag:[]},{id:"c4_26",name:"黄渝宸",tag:[]},
+            {id:"c4_27",name:"林煜轩",tag:[]},{id:"c4_28",name:"黄紫涵",tag:[]},
+            {id:"c4_29",name:"陈奇楦",tag:[]},{id:"c4_30",name:"张之遥",tag:[]},
+            {id:"c4_31",name:"杨梓",tag:[]},{id:"c4_32",name:"石兆锋",tag:[]},
+            {id:"c4_33",name:"陈静涵",tag:[]},{id:"c4_34",name:"陈星龙",tag:[]},
+            {id:"c4_35",name:"关宏阳",tag:[]},{id:"c4_36",name:"阙靖芸",tag:[]},
+          ]},
+          { name: "第四组", students: [
+            {id:"c4_37",name:"彭隆杰",tag:[]},{id:"c4_38",name:"钟旸玥",tag:[]},
+            {id:"c4_39",name:"郑宛蓉",tag:[]},{id:"c4_40",name:"林靖鹏",tag:[]},
+            {id:"c4_41",name:"陈今铠",tag:[]},{id:"c4_42",name:"石念",tag:[]},
+            {id:"c4_43",name:"林诗锜",tag:[]},{id:"c4_44",name:"刘善锋",tag:[]},
+            {id:"c4_45",name:"周郑楷",tag:[]},{id:"c4_46",name:"陈逸飞",tag:[]},
+            {id:"c4_47",name:"李祈耀",tag:[]},{id:"c4_48",name:"侯欣语",tag:[]},
+            {id:"c4_49",name:"黄绍雄",tag:[]},
+          ]},
+        ],
+      ];
+
+      let currentClass = 0;
+      let allGroups = JSON.parse(JSON.stringify(allInitial));
+
+      function storageKey(ci) { return "seatData_class" + ci; }
+
+      function loadSaved() {
+        for (let ci = 0; ci < 2; ci++) {
+          const saved = localStorage.getItem(storageKey(ci));
+          if (!saved) continue;
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) allGroups[ci] = parsed;
+          } catch(e) {}
+        }
+      }
+      loadSaved();
+
+      function switchClass(ci) {
+        currentClass = ci;
+        document.querySelectorAll(".tab-btn").forEach((b, i) => b.classList.toggle("active", i === ci));
+        render();
+      }
+
+      const classroom = document.getElementById("classroom");
+
+      function render() {
+        classroom.innerHTML = "";
+        allGroups[currentClass].forEach((group) => {
+          const gEl = document.createElement("div");
+          gEl.className = "group";
+          const title = document.createElement("div");
+          title.className = "group-title";
+          title.textContent = group.name;
+          gEl.appendChild(title);
+          const grid = document.createElement("div");
+          grid.className = "grid";
+          group.students.forEach((stu) => {
+            const stuEl = document.createElement("div");
+            stuEl.className = "student";
+            stuEl.draggable = true;
+            stuEl.dataset.id = stu.id;
+            const info = document.createElement("div");
+            info.className = "info";
+            info.innerHTML = `${stu.name}<div class="sub">${stu.id.replace(/^c\d_/,"#")}</div>`;
+            const tagContainer = document.createElement("div");
+            tagContainer.className = "tag-container";
+            (stu.tag || []).forEach((t, idx) => tagContainer.appendChild(createTagEl(stu, t, idx)));
+            const input = document.createElement("input");
+            input.className = "tag-input";
+            input.placeholder = "添加标签";
+            input.addEventListener("keydown", (e) => {
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              const val = input.value.trim();
+              if (!val) return;
+              if (!stu.tag) stu.tag = [];
+              if (stu.tag.length >= 5) { alert("最多5个标签"); input.value = ""; return; }
+              stu.tag.push(val);
+              tagContainer.insertBefore(createTagEl(stu, val, stu.tag.length - 1), input);
+              input.value = "";
+            });
+            tagContainer.appendChild(input);
+            stuEl.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", stu.id); stuEl.classList.add("dragging"); });
+            stuEl.addEventListener("dragend", () => { stuEl.classList.remove("dragging"); document.querySelectorAll(".student.over").forEach(el => el.classList.remove("over")); });
+            stuEl.addEventListener("dragover", (e) => { e.preventDefault(); stuEl.classList.add("over"); });
+            stuEl.addEventListener("dragleave", () => stuEl.classList.remove("over"));
+            stuEl.addEventListener("drop", (e) => {
+              e.preventDefault(); stuEl.classList.remove("over");
+              const fromId = e.dataTransfer.getData("text/plain");
+              if (fromId && fromId !== stu.id) { swapStudents(fromId, stu.id); render(); }
+            });
+            stuEl.appendChild(info);
+            stuEl.appendChild(tagContainer);
+            grid.appendChild(stuEl);
+          });
+          gEl.appendChild(grid);
+          classroom.appendChild(gEl);
+        });
+      }
+
+      function createTagEl(stu, val, idx) {
+        const tEl = document.createElement("div");
+        tEl.className = "tag-item";
+        tEl.innerText = val;
+        const rm = document.createElement("span");
+        rm.className = "remove"; rm.innerText = "×";
+        rm.addEventListener("click", () => { stu.tag.splice(idx, 1); render(); });
+        tEl.appendChild(rm);
+        return tEl;
+      }
+
+      function swapStudents(idA, idB) {
+        const groups = allGroups[currentClass];
+        let aPos = null, bPos = null;
+        for (let gi = 0; gi < groups.length; gi++) {
+          for (let si = 0; si < groups[gi].students.length; si++) {
+            if (groups[gi].students[si].id === idA) aPos = {gi, si};
+            if (groups[gi].students[si].id === idB) bPos = {gi, si};
+          }
+        }
+        if (aPos && bPos) {
+          const tmp = groups[aPos.gi].students[aPos.si];
+          groups[aPos.gi].students[aPos.si] = groups[bPos.gi].students[bPos.si];
+          groups[bPos.gi].students[bPos.si] = tmp;
+        }
+      }
+
+      document.getElementById("saveBtn").addEventListener("click", () => {
+        localStorage.setItem(storageKey(currentClass), JSON.stringify(allGroups[currentClass]));
+        alert("已保存");
+      });
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        if (!confirm("确认清除并恢复初始？")) return;
+        localStorage.removeItem(storageKey(currentClass));
+        allGroups[currentClass] = JSON.parse(JSON.stringify(allInitial[currentClass]));
+        render(); alert("已恢复初始");
+      });
+      document.getElementById("exportBtn").addEventListener("click", () => {
+        const blob = new Blob([JSON.stringify(allGroups[currentClass], null, 2)], {type:"application/json"});
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+        a.download = (currentClass===0?"三班":"四班") + "_座位.json"; a.click();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

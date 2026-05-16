@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闽A 自选车牌</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+  h2 { text-align: center; margin-bottom: 20px; color: #333; }
+  .plate-display {
+    display: flex; justify-content: center; align-items: center;
+    gap: 6px; margin-bottom: 30px;
+  }
+  .plate-box {
+    width: 52px; height: 60px; border: 2px solid #1a56db;
+    border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; font-size: 22px; font-weight: bold;
+    background: #fff; color: #1a56db;
+  }
+  .plate-box.fixed { background: #e8f0fe; color: #333; }
+  .plate-box.active { background: #1a56db; color: #fff; }
+  .plate-box.current { border-color: #f59e0b; box-shadow: 0 0 0 3px #fde68a; }
+  .dot { font-size: 20px; color: #666; }
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .chars { display: flex; flex-wrap: wrap; gap: 8px; }
+  .char-btn {
+    width: 48px; height: 48px; border: 1.5px solid #ccc;
+    border-radius: 6px; font-size: 16px; font-weight: bold;
+    background: #fff; cursor: pointer;
+  }
+  .char-btn:hover:not(:disabled) { border-color: #1a56db; color: #1a56db; }
+  .char-btn:disabled { background: #f0f0f0; color: #ccc; border-color: #e8e8e8; cursor: not-allowed; }
+  .actions { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+  .btn { padding: 10px 28px; border-radius: 6px; border: none; font-size: 15px; cursor: pointer; background: #e5e7eb; }
+  .btn:hover { background: #d1d5db; }
+  .result { text-align: center; margin-top: 16px; font-size: 18px; color: #059669; font-weight: bold; min-height: 28px; }
+  .step-hint { text-align: center; font-size: 13px; color: #888; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<h2>闽A 自选车牌号码</h2>
+
+<div class="plate-display">
+  <div class="plate-box fixed">闽</div>
+  <div class="plate-box fixed">A</div>
+  <div class="dot">·</div>
+  <div class="plate-box" id="box-0"></div>
+  <div class="plate-box" id="box-1"></div>
+  <div class="plate-box" id="box-2"></div>
+  <div class="plate-box" id="box-3"></div>
+  <div class="plate-box" id="box-4"></div>
+  <div class="plate-box" id="box-5"></div>
+</div>
+
+<div class="step-hint" id="hint"></div>
+<div id="picker"></div>
+
+<div class="actions">
+  <button class="btn" onclick="undo()">← 退一步</button>
+  <button class="btn" onclick="reset()">重置</button>
+</div>
+<div class="result" id="result"></div>
+
+<script>
+// 数据源：闽A + 以下前缀 + 自选后2位(00~99)
+// 原始数据：闽AFR4500~AFR4599 → 去掉"闽A"前缀 → "FR4500"前4位="FR45"
+const segments = [
+  // AFR系列
+  "FR45","FR24","FR29","FR44","FR26","FR65","FR48","FR51","FR38",
+  // AFQ系列
+  "FQ93","FQ82","FQ61","FQ91","FQ84","FQ90","FQ06","FQ87",
+  // AFS系列
+  "FS26","FS96","FS17","FS22","FS24","FS10",
+  // AA7系列（闽AA7xxxx，去掉闽A后为 A7xxxx，前4位为A7xx）
+  "A714","A727","A730","A742","A733","A708","A738","A720","A707",
+  "A731","A716","A748","A735","A726","A739","A721","A746","A724",
+  "A710","A718","A704","A705","A722","A711","A723","A725","A719",
+  "A717","A728","A729","A747","A737","A700","A732","A744","A709",
+  "A750","A715","A702","A741","A740","A701","A706","A713","A703",
+  "A743","A745","A736","A734","A751"
+];
+
+// 展开所有号码（6位字符串）
+const allPlates = new Set();
+for (const seg of segments) {
+  for (let i = 0; i <= 99; i++) {
+    allPlates.add(seg + String(i).padStart(2, '0'));
+  }
+}
+
+// 构建前缀树
+const trie = {};
+for (const plate of allPlates) {
+  let node = trie;
+  for (const ch of plate) {
+    if (!node[ch]) node[ch] = {};
+    node = node[ch];
+  }
+  node['$'] = true;
+}
+
+const TOTAL = 6;
+const selected = [];
+
+function getAvailable(prefix) {
+  let node = trie;
+  for (const ch of prefix) {
+    if (!node[ch]) return new Set();
+    node = node[ch];
+  }
+  return new Set(Object.keys(node).filter(k => k !== '$'));
+}
+
+// 每个位置上数据中出现过的所有字符
+const usedAtPos = Array.from({length: TOTAL}, (_, i) => {
+  const s = new Set();
+  for (const p of allPlates) s.add(p[i]);
+  return s;
+});
+
+function render() {
+  for (let i = 0; i < TOTAL; i++) {
+    const box = document.getElementById('box-' + i);
+    box.textContent = selected[i] || '';
+    box.className = 'plate-box';
+    if (selected[i]) box.classList.add('active');
+    else if (i === selected.length) box.classList.add('current');
+  }
+
+  const step = selected.length;
+  if (step >= TOTAL) {
+    document.getElementById('picker').innerHTML = '';
+    document.getElementById('hint').textContent = '';
+    document.getElementById('result').textContent = '已选号码：闽A · ' + selected.join('');
+    return;
+  }
+
+  document.getElementById('result').textContent = '';
+  document.getElementById('hint').textContent = `请选择第 ${step + 1} 位`;
+
+  const available = getAvailable(selected);
+  const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].filter(c => usedAtPos[step].has(c));
+  const digits = [...'0123456789'].filter(c => usedAtPos[step].has(c));
+
+  let html = '';
+  if (letters.length) {
+    html += `<div class="section"><div class="section-title">字母</div><div class="chars">`;
+    for (const c of letters) {
+      html += `<button class="char-btn" ${available.has(c) ? '' : 'disabled'} onclick="pick('${c}')">${c}</button>`;
+    }
+    html += `</div></div>`;
+  }
+  if (digits.length) {
+    html += `<div class="section"><div class="section-title">数字</div><div class="chars">`;
+    for (const c of digits) {
+      html += `<button class="char-btn" ${available.has(c) ? '' : 'disabled'} onclick="pick('${c}')">${c}</button>`;
+    }
+    html += `</div></div>`;
+  }
+  document.getElementById('picker').innerHTML = html;
+}
+
+function pick(ch) { selected.push(ch); render(); }
+function undo() { selected.pop(); render(); }
+function reset() { selected.length = 0; render(); }
+
+render();
+</script>
+</body>
+</html>

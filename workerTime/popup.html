@@ -1,300 +1,299 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
   <head>
-    <title>工时助手</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工时助手</title>
     <style>
-      body {
-        font-family: "Press Start 2P", cursive;
-        font-size: 18px;
+      :root {
+        --bg: #f6f1e8;
+        --card: #ffffff;
+        --text: #1f1d1a;
+        --muted: #746b61;
+        --line: #d9d0c5;
+        --accent: #d96c31;
+        --accent-soft: rgba(217, 108, 49, 0.12);
+        --safe: #237b54;
+        --danger: #b93d2d;
+      }
+
+      body[data-theme-mode="dark"] {
+        --bg: #161a20;
+        --card: #1f252d;
+        --text: #eef2f7;
+        --muted: #aeb6c2;
+        --line: #313944;
+        --accent: #8c97ff;
+        --accent-soft: rgba(140, 151, 255, 0.16);
+        --safe: #63c98f;
+        --danger: #ff8b7a;
       }
 
       * {
-        margin: 0;
-        padding: 0;
-      }
-
-      .page-loading-warp {
-        display: none;
-        justify-content: center;
-        align-items: center;
-        position: absolute;
-        opacity: 0.6;
-        z-index: 10;
-        background: white;
-        width: 100%;
-        height: 100%;
-        left: 0;
-        top: 0;
-      }
-
-      .ant-spin {
-        -webkit-box-sizing: border-box;
         box-sizing: border-box;
+      }
+
+      body {
         margin: 0;
-        padding: 0;
-        font-size: 14px;
-        font-variant: tabular-nums;
-        line-height: 1.5;
-        list-style: none;
-        -webkit-font-feature-settings: "tnum";
-        font-feature-settings: "tnum";
-        position: absolute;
-        display: none;
-        color: #1890ff;
-        text-align: center;
-        vertical-align: middle;
-        opacity: 0;
-        -webkit-transition: -webkit-transform 0.3s
-          cubic-bezier(0.78, 0.14, 0.15, 0.86);
-        transition: -webkit-transform 0.3s cubic-bezier(0.78, 0.14, 0.15, 0.86);
-        transition: transform 0.3s cubic-bezier(0.78, 0.14, 0.15, 0.86);
-        transition:
-          transform 0.3s cubic-bezier(0.78, 0.14, 0.15, 0.86),
-          -webkit-transform 0.3s cubic-bezier(0.78, 0.14, 0.15, 0.86);
+        width: 260px;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          sans-serif;
       }
 
-      .ant-spin-spinning {
-        position: static;
-        display: inline-block;
-        opacity: 1;
+      button,
+      select,
+      input {
+        font: inherit;
       }
 
-      .ant-spin-dot {
+      .page {
         position: relative;
-        display: inline-block;
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
       }
 
-      .ant-spin-dot-item {
+      .loading {
         position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(246, 241, 232, 0.72);
+      }
+
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border: 2px solid #d8cfc2;
+        border-top-color: var(--accent);
+        border-radius: 999px;
+        animation: rotate 0.8s linear infinite;
+      }
+
+      .card {
+        padding: 10px;
+        background: var(--card);
+      }
+
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .row + .row {
+        margin-top: 8px;
+      }
+
+      .label {
+        flex-shrink: 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .inline-select {
+        width: 64px;
+        height: 28px;
+        padding: 0 6px;
+        border: 1px solid #a99e91;
+        background: #fff;
+      }
+
+      .action-mini {
+        min-width: 50px;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid #8e8376;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .checks {
+        margin: 8px 0;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+      }
+
+      .check + .check {
+        margin-top: 6px;
+      }
+
+      .summary {
+        margin: 8px 0;
+        padding: 7px 8px;
+        border: 1px solid #ece3d7;
+        background: #fcfaf7;
+        font-size: 12px;
+      }
+
+      .summary-line + .summary-line {
+        margin-top: 4px;
+      }
+
+      .summary-line strong.is-safe {
+        color: var(--safe);
+      }
+
+      .summary-line strong.is-danger {
+        color: var(--danger);
+      }
+
+      .summary-meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .status {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 1px solid #e8e8e8;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .theme-toggle img {
+        width: 15px;
+        height: 15px;
         display: block;
-        width: 9px;
-        height: 9px;
-        background-color: #b62021;
-        border-radius: 100%;
-        -webkit-transform: scale(0.75);
-        -ms-transform: scale(0.75);
-        transform: scale(0.75);
-        -webkit-transform-origin: 50% 50%;
-        -ms-transform-origin: 50% 50%;
-        transform-origin: 50% 50%;
-        opacity: 0.3;
-        -webkit-animation: antSpinMove 1s infinite linear alternate;
-        animation: antSpinMove 1s infinite linear alternate;
       }
 
-      .ant-spin-dot-item:nth-child(1) {
-        top: 0;
-        left: 0;
+      .buttons {
+        display: grid;
+        gap: 6px;
       }
 
-      .ant-spin-dot-item:nth-child(2) {
-        top: 0;
-        right: 0;
-        -webkit-animation-delay: 0.4s;
-        animation-delay: 0.4s;
+      .button {
+        width: 100%;
+        height: 28px;
+        border: 1px solid #8e8376;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
       }
 
-      .ant-spin-dot-item:nth-child(3) {
-        right: 0;
-        bottom: 0;
-        -webkit-animation-delay: 0.8s;
-        animation-delay: 0.8s;
+      body[data-theme-mode="dark"] .inline-select,
+      body[data-theme-mode="dark"] .action-mini,
+      body[data-theme-mode="dark"] .button,
+      body[data-theme-mode="dark"] .theme-toggle {
+        color: var(--text);
+        border-color: #44505d;
+        background: #262d36;
       }
 
-      .ant-spin-dot-item:nth-child(4) {
-        bottom: 0;
-        left: 0;
-        -webkit-animation-delay: 1.2s;
-        animation-delay: 1.2s;
+      body[data-theme-mode="dark"] .summary {
+        border-color: #313944;
+        background: #1a2027;
       }
 
-      .ant-spin-dot-spin {
-        -webkit-transform: rotate(45deg);
-        -ms-transform: rotate(45deg);
-        transform: rotate(45deg);
-        -webkit-animation: antRotate 1.2s infinite linear;
-        animation: antRotate 1.2s infinite linear;
-      }
-
-      .ant-spin-lg .ant-spin-dot {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-      }
-
-      .ant-spin-lg .ant-spin-dot span {
-        width: 14px;
-        height: 14px;
-      }
-
-      @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-        .ant-spin-blur {
-          background: #fff;
-          opacity: 0.5;
-        }
-      }
-
-      @-webkit-keyframes antSpinMove {
+      @keyframes rotate {
         to {
-          opacity: 1;
-        }
-      }
-
-      @keyframes antSpinMove {
-        to {
-          opacity: 1;
-        }
-      }
-
-      @-webkit-keyframes antRotate {
-        to {
-          -webkit-transform: rotate(405deg);
-          transform: rotate(405deg);
-        }
-      }
-
-      @keyframes antRotate {
-        to {
-          -webkit-transform: rotate(405deg);
-          transform: rotate(405deg);
+          transform: rotate(360deg);
         }
       }
     </style>
   </head>
-
-  <body style="padding: 8px; min-width: 250px; position: relative">
-    <div class="page-loading-warp" id="loading">
-      <div class="ant-spin ant-spin-lg ant-spin-spinning">
-        <span class="ant-spin-dot ant-spin-dot-spin">
-          <span class="ant-spin-dot-item"></span>
-          <span class="ant-spin-dot-item"></span>
-          <span class="ant-spin-dot-item"></span>
-          <span class="ant-spin-dot-item"></span>
-        </span>
+  <body>
+    <div class="page">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
       </div>
+
+      <section class="card">
+        <div class="head">
+          <h1 class="title">工时助手v4.3</h1>
+          <button
+            class="theme-toggle"
+            id="themeModeToggle"
+            type="button"
+            aria-label="切换夜间模式"
+            title="切换夜间模式"
+          >
+            <img id="themeModeIcon" src="./月亮.svg" alt="" />
+          </button>
+        </div>
+
+        <div class="row">
+          <span class="label">考勤授权链接</span>
+          <button class="action-mini" id="link">打开</button>
+        </div>
+
+        <div class="row">
+          <span class="label">年份</span>
+          <select id="selectedYear" class="inline-select"></select>
+          <span class="label">月份</span>
+          <select id="selectedMonth" class="inline-select">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+        </div>
+
+        <div class="checks">
+          <label class="check">
+            <input type="checkbox" id="includesDay" />
+            <span>包含今天数据</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="ignoreForgetDK" />
+            <span>未打卡时段计入工时(工作日)</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="autoOpenTable" />
+            <span>授权后自动打开在线报表</span>
+          </label>
+        </div>
+
+        <div id="calcContent"></div>
+
+        <div class="buttons">
+          <button class="button" id="calc">统计时长</button>
+          <button class="button" id="calcOnline">在线查看报表</button>
+          <button class="button" id="submit">导出报表</button>
+        </div>
+      </section>
     </div>
 
-    <div style="text-align: center; padding: 8px">工时助手v4.2</div>
-    <div style="padding: 8px 0px; display: flex; align-items: center">
-      <a target="_blank" style="white-space: nowrap">考勤授权链接</a>
-      <button
-        id="link"
-        id="submit"
-        style="
-          border-radius: 4px;
-          outline: none;
-          border: 1px solid #000;
-          background: none;
-          cursor: pointer;
-          margin-left: 4px;
-          padding: 3px 16px;
-        "
-      >
-        打开
-      </button>
-    </div>
-
-    <div style="display: flex; align-items: center">
-      <div style="padding-right: 8px">年份</div>
-      <select id="selectedYear" style="width: 60px"></select>
-      <div style="padding-left: 8px; padding-right: 8px">月份</div>
-      <select id="selectedMonth" style="width: 45px">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-        <option value="11">11</option>
-        <option value="12">12</option>
-      </select>
-    </div>
-
-    <div style="padding-top: 8px">
-      <label style="display: flex; align-items: center">
-        <input type="checkbox" class="nes-checkbox" id="includesDay" />
-        <span className="nes-text" style="padding-left: 4px">包含今天数据</span>
-      </label>
-    </div>
-
-    <div style="padding-top: 8px">
-      <label style="display: flex; align-items: center">
-        <input type="checkbox" class="nes-checkbox" id="ignoreForgetDK" />
-        <span className="nes-text" style="padding-left: 4px"
-          >未打卡时段计入工时(工作日)</span
-        >
-      </label>
-    </div>
-
-    <div style="padding-top: 8px">
-      <label style="display: flex; align-items: center">
-        <input type="checkbox" class="nes-checkbox" id="autoOpenTable" />
-        <span className="nes-text" style="padding-left: 4px"
-          >授权后自动打开在线报表</span
-        >
-      </label>
-    </div>
-
-    <div style="padding: 16px 0" id="calcContent"></div>
-
-    <button
-      style="
-        border-radius: 4px;
-        outline: none;
-        border: 1px solid #000;
-        background: none;
-        cursor: pointer;
-        padding: 3px;
-        margin-top: 8px;
-        display: block;
-        width: 100%;
-      "
-      id="calc"
-    >
-      统计时长
-    </button>
-
-    <button
-      style="
-        border-radius: 4px;
-        outline: none;
-        border: 1px solid #000;
-        background: none;
-        cursor: pointer;
-        padding: 3px;
-        margin-top: 8px;
-        display: block;
-        width: 100%;
-      "
-      id="calcOnline"
-    >
-      在线查看报表
-    </button>
-
-    <button
-      style="
-        border-radius: 4px;
-        outline: none;
-        border: 1px solid #000;
-        background: none;
-        cursor: pointer;
-        padding: 3px;
-        margin-top: 8px;
-        display: block;
-        width: 100%;
-      "
-      id="submit"
-    >
-      导出报表
-    </button>
     <script type="text/javascript" src="js/popup.js"></script>
   </body>
 </html>

@@ -1,19 +1,24 @@
 import {
-  closeAuthTab,
   closeChromeViewPage,
   chromeTabsSendMessage,
   queryChromeActiveTabId,
   injectContentJs,
+  openOrReuseAuthTab,
 } from "../utils/native";
 
 async function handler(type, payload, sendResponse) {
   const id = await queryChromeActiveTabId();
 
+  if (type === "tokenExpired") {
+    await openOrReuseAuthTab();
+    sendResponse();
+    return;
+  }
+
   if (!id) {
     try {
+      await openOrReuseAuthTab();
       sendResponse();
-      const targetId = await queryChromeActiveTabId(true);
-      chromeTabsSendMessage(targetId, { type: "openAuth" });
     } catch (e) {
       console.log(e, "error");
     }
@@ -38,12 +43,13 @@ async function handler(type, payload, sendResponse) {
     }
     case "calcOnline": {
       if (id) {
-        chromeTabsSendMessage(id, { type: "calcOnline" }, (data) => {
+        chromeTabsSendMessage(id, { type: "calcOnline" }, async (data) => {
           if (data?.payload?.type === "calcOnline") {
-            chrome.tabs.create({
+            await chrome.tabs.create({
               url: chrome.runtime.getURL("view/calc.html"),
             });
           }
+          sendResponse(data);
         });
       }
       break;
@@ -53,11 +59,6 @@ async function handler(type, payload, sendResponse) {
       chrome.tabs.create({
         url: chrome.runtime.getURL("view/calc.html"),
       });
-      break;
-    }
-    case "tokenExpired": {
-      closeAuthTab();
-      chromeTabsSendMessage(id, { type: "openAuth" });
       break;
     }
   }

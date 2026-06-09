@@ -9,11 +9,11 @@ Storage.get().then((res) => {
 
   if (res.autoOpenTable && isTargetPage) {
     onHandleData()
-      .catch(tokenExpired)
       .then(() => {
         chrome.runtime.sendMessage({
           type: "calcOnlineView",
         });
-      });
+      })
+      .catch(tokenExpired);
   }
 });

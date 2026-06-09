@@ -4,8 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "webpack",
-    "server": "webpack serve",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "server": "webpack serve --mode development",
     "zip": "node ./zip.js"
   },
   "dependencies": {

@@ -1,5 +1,16 @@
-import { EFFECT_HOSTS } from "./consts";
+import { AUTH_LINK, EFFECT_HOSTS } from "./consts";
 import { validURL } from "./tools";
+
+const AUTH_RELATED_HOSTS = ["open.feishu.cn", ...EFFECT_HOSTS];
+
+function isHostMatched(url, hosts) {
+  if (!validURL(url)) {
+    return false;
+  }
+
+  const parsedUrl = new URL(url);
+  return hosts.some((host) => parsedUrl.host.includes(host));
+}
 
 export const chromeRuntimeSendMessage = (data, callback) => {
   chrome.runtime.sendMessage(data, callback);
@@ -13,10 +24,7 @@ export const queryChromeActiveTabId = (pickOne = false) => {
   return new Promise((resolve) => {
     chrome.tabs.query({}).then((tabs) => {
       const list = tabs.filter((item) => {
-        if (validURL(item.url)) {
-          const url = new URL(item.url);
-          return EFFECT_HOSTS.some((host) => url.host.includes(host));
-        }
+        return isHostMatched(item.url, EFFECT_HOSTS);
       });
 
       const activeTab = list.find((item) => item.active);
@@ -74,16 +82,40 @@ export const queryAuthTabId = () => {
   return new Promise((resolve) => {
     chrome.tabs.query({}).then((tabs) => {
       const list = tabs.filter((item) => {
-        if (validURL(item.url)) {
-          const url = new URL(item.url);
-          return EFFECT_HOSTS.some((host) => url.host.includes(host));
-        }
+        return isHostMatched(item.url, EFFECT_HOSTS);
       });
 
       resolve(list[0] || null);
     });
   });
 };
+
+export const queryAuthRelatedTab = () => {
+  return new Promise((resolve) => {
+    chrome.tabs.query({}).then((tabs) => {
+      const list = tabs.filter((item) => {
+        return isHostMatched(item.url, AUTH_RELATED_HOSTS);
+      });
+
+      resolve(list[0] || null);
+    });
+  });
+};
+
+export async function openOrReuseAuthTab() {
+  const tab = await queryAuthRelatedTab();
+
+  if (tab) {
+    return chrome.tabs.update(tab.id, {
+      active: true,
+      url: AUTH_LINK,
+    });
+  }
+
+  return chrome.tabs.create({
+    url: AUTH_LINK,
+  });
+}
 
 export const closeChromeTab = (tabId) => {
   return new Promise((resolve) => {

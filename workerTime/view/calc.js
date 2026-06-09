@@ -1,329 +1,325 @@
-function renderTipColor(time, styleStr) {
-  if (Number(time) !== Number(time)) return "";
-  return time > 0
-    ? `style="color:#00B96B;${styleStr}"`
-    : `style="color:#E0282E;${styleStr}"`;
-}
+import {
+  getCurrentWorkdayText,
+  getWorkdayConfig,
+  getWorkdayRuleList,
+} from "../utils/workday.js";
+import { getThemeSettings, applyThemeToDocument } from "../utils/theme.js";
 
-function renderTipText(time, afterText) {
-  return time > 0
-    ? `可调休: ${time.toFixed(2)}${afterText}`
-    : `工时不足: ${time.toFixed(2)}${afterText}`;
-}
+const THEME_ICON_MAP = {
+  light: {
+    src: "../月亮.svg",
+    label: "切换到夜间模式",
+  },
+  dark: {
+    src: "../太阳.svg",
+    label: "切换到浅色模式",
+  },
+};
 
-const SHORTER_WORKDAY_START_DATE = "2024-08-26";
-const NORMAL_WORKDAY_RESUME_DATE = "2026-04-01";
-
-function getWorkdayConfig(date = new Date()) {
-  const currentDate = new Date(date);
-  const shorterWorkdayStart = new Date(SHORTER_WORKDAY_START_DATE);
-  const normalWorkdayResume = new Date(NORMAL_WORKDAY_RESUME_DATE);
-
-  if (
-    currentDate.getTime() >= shorterWorkdayStart.getTime() &&
-    currentDate.getTime() < normalWorkdayResume.getTime()
-  ) {
-    return {
-      dayWorkTimeText: "8小时30分钟",
-      endTime: "17:30:00",
-    };
+function getTipClass(time) {
+  if (Number(time) !== Number(time)) {
+    return "";
   }
 
-  return {
-    dayWorkTimeText: "9小时",
-    endTime: "18:00:00",
-  };
+  return time > 0 ? "tip-positive" : "tip-negative";
 }
 
-function curDateWorkTime() {
-  return getWorkdayConfig().dayWorkTimeText;
+function getSummaryTone(renderConvertTimeText = "") {
+  return renderConvertTimeText.includes("工时不足") ? "is-danger" : "is-safe";
 }
 
-function djs() {
-  // 假设我们有一个目标时间点，以毫秒为单位
-  const targetTime = new Date(
-    `${new Date().toDateString()} ${getWorkdayConfig().endTime}`
-  ).getTime();
+function renderStateTag(item) {
+  const tags = [];
 
-  // 获取当前时间
-  const currentTime = new Date().getTime();
-
-  // 计算剩余时间（毫秒）
-  let timeDifference = targetTime - currentTime;
-
-  // 倒计时函数
-  function countdown() {
-    // 剩余时间（毫秒）
-    const remainingTime = timeDifference;
-
-    // 计算天、小时、分钟和秒
-    const hours = Math.floor(
-      (remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
-    const minutes = Math.floor(
-      (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
-    );
-    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-
-    // 显示倒计时结果
-    document.querySelector(
-      "#time"
-    ).innerHTML = `距离下班还有：<span style="text-align: left; display: inline-block; font-size: 20px; min-width: 264px">${hours}小时 ${minutes}分钟 ${seconds}秒</span>`;
-
-    // 更新剩余时间
-    timeDifference -= 1000;
-
-    // 如果倒计时结束，清除定时器
-    if (timeDifference <= 0) {
-      document.querySelector("#time").innerHTML = `别卷了，回去休息！`;
-      try {
-        countdownInterval && clearInterval(countdownInterval);
-      } catch (e) {}
-    }
+  if (item.isFreeDay) {
+    tags.push(`<span class="tag tag-overtime">休息日上班</span>`);
   }
 
-  // 每一秒调用一次 countdown 函数
-  countdown();
-  const countdownInterval = setInterval(countdown, 1000);
+  if (item.ignoreForgetDK) {
+    tags.push(`<span class="tag tag-auto">缺卡已补齐</span>`);
+  }
 
-  return () => {
-    countdownInterval && clearInterval(countdownInterval);
-  };
+  if (item.hour === "忘记打卡" && !item.ignoreForgetDK && !item.isFreeDay) {
+    tags.push(`<span class="tag tag-miss">缺卡待确认</span>`);
+  }
+
+  if (item.forceFreeTotalTime) {
+    tags.push(`<span class="tag tag-leave">含请假</span>`);
+  }
+
+  return tags.join("");
+}
+
+function renderDaySummary(item) {
+  const diffText =
+    item.convertDiffTime || (item.hour === "忘记打卡" ? "待确认" : "0分钟");
+
+  return `
+    <td class="date-cell">
+      <div class="date-main">${item.workDay}</div>
+      <div class="tag-row">${renderStateTag(item)}</div>
+    </td>
+    <td>
+      <div class="mono-text">${item.startTime}</div>
+      ${
+        item.ignoreForgetDK && item.missDKType === 1
+          ? '<div class="cell-note">(忘记打卡)</div>'
+          : ""
+      }
+      ${
+        item.forceFreeBeginTime
+          ? `<div class="cell-note">${item.forceFreeBeginTime}(请假)</div>`
+          : ""
+      }
+    </td>
+    <td>
+      <div class="mono-text">${item.endTime}</div>
+      ${
+        item.ignoreForgetDK && item.missDKType === 2
+          ? '<div class="cell-note">(忘记打卡)</div>'
+          : ""
+      }
+      ${
+        item.forceFreeEndTime
+          ? `<div class="cell-note">${item.forceFreeEndTime}(请假)</div>`
+          : ""
+      }
+    </td>
+    <td>
+      <div class="value-strong">${item.convertTime || "0分钟"}</div>
+    </td>
+    <td>
+      <div class="mono-text">${item.hour}(h)</div>
+      <div class="mono-text">${item.minutes}(mins)</div>
+    </td>
+    <td class="${getTipClass(item.diffHour)}">
+      <div class="value-strong">${diffText}</div>
+    </td>
+    <td>
+      <div class="value-strong">${item.convertForceFreeTotalTime || "-"}</div>
+    </td>
+  `;
+}
+
+function renderWeekCell(item) {
+  if (!item.rowspan) {
+    return "";
+  }
+
+  const weekStatusText =
+    item.diffWeekHour > 0
+      ? `可调休：${item.convertDiffWeekTime}`
+      : `工时不足：${item.convertDiffWeekTime}`;
+
+  return `
+    <td rowspan="${item.rowspan}" class="week-cell">
+      <div class="week-card">
+        <div class="week-index">本月第${item.convertWeekNumber}周</div>
+        <div class="week-time">周工时：${item.convertWeekTime}</div>
+        <div class="week-diff ${getTipClass(item.diffWeekHour)}">${weekStatusText}</div>
+      </div>
+    </td>
+  `;
+}
+
+function renderEmptyState() {
+  return `
+    <section class="panel empty-state">
+      <div class="empty-title">暂无报表数据</div>
+      <div class="empty-text">先回到插件弹窗点击“统计时长”或“在线查看报表”。</div>
+    </section>
+  `;
+}
+
+function isPendingMissPunch(item) {
+  return item.hour === "忘记打卡" && !item.ignoreForgetDK && !item.isFreeDay;
+}
+
+function renderRuleTipsInline() {
+  return getWorkdayRuleList()
+    .map((rule) => {
+      if (!rule.start && rule.end) {
+        return `${rule.end}及以前 ${rule.dayWorkTimeText} (${rule.beginTime} - ${rule.endTime})`;
+      }
+
+      if (rule.start && rule.end) {
+        return `${rule.start} 至 ${rule.end} ${rule.dayWorkTimeText} (${rule.beginTime} - ${rule.endTime})`;
+      }
+
+      return `${rule.start}起 ${rule.dayWorkTimeText} (${rule.beginTime} - ${rule.endTime})`;
+    })
+    .join("；");
+}
+
+function renderMissPunchNotes(rowData = []) {
+  const pendingRows = rowData.filter((item) => isPendingMissPunch(item));
+  const pendingText = pendingRows.length
+    ? `<strong>缺卡待确认 ${pendingRows.length} 天，表格内已高亮</strong>；`
+    : "";
+  const ruleTips = renderRuleTipsInline();
+
+  return `
+    <div class="foot-tip">
+      <span class="foot-tip-label">tips</span>
+      <span class="foot-tip-text">${pendingText}工时规则：${ruleTips}</span>
+    </div>
+  `;
 }
 
 function renderExcelData(
-  rowData,
-  { convertForceFreeTotalMins, renderConvertTimeText, convertDiffTime }
+  rowData = [],
+  {
+    convertForceFreeTotalMins,
+    renderConvertTimeText,
+    convertDiffTime,
+    updateTime,
+  },
 ) {
   const tableContentDom = document.querySelector("#table-content");
 
-  const enoughTime = !renderConvertTimeText?.includes("工时不足");
-  let tableContent = `
-            <table border="1" cellspacing="0" cellpadding="0" style="width: 100%; text-align: center;">
-              <thead>
-                <tr>
-                  <th colspan="2">
-                    <div class="flex items-center justify-center">
-                      工时概览：
-                        <span ${renderTipColor(
-                          enoughTime ? 1 : 0,
-                          "font-size: 18px;"
-                        )}>
-                          ${
-                            enoughTime ? "可调休" : "工时不足"
-                          } ${convertDiffTime}
-                        <span>
-                      ${
-                        enoughTime
-                          ? '<img width="16px" src="./images/jb.svg"/>'
-                          : '<img style="margin-left: 6px" width="16px" src="./images/hjb.svg"/>'
-                      }
-                    </div>
-                  </th>
-
-                  <th colspan="2">当前日工时：<span style="font-size: 18px;">${curDateWorkTime()}</span></th>
-
-                  <th colspan="2">
-                    <div class="flex items-center justify-center">
-                      月休假时长：<span style="font-size: 18px;">${
-                        convertForceFreeTotalMins || 0
-                      }</span>
-                    </div>
-                  </th>
-
-                  <th colspan="3">
-                    <div id="time"></div>
-                  </th>
-                </tr>
-                <tr>
-                  <th scope="col">日期</th>
-                  <th scope="col">工作时长(格式化)</th>
-                  <th scope="col">工作时长(原始数据)</th>
-                  <th scope="col">差异值</th>
-                  <th scope="col">上班打卡时间</th>
-                  <th scope="col">下班打卡时间</th>
-                  <th scope="col">请假时长</th>
-                  <th scope="col">周工作时长</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rowData
-                  .map((item) => {
-                    return `
-                        <tr>
-                          <td>
-                            ${item.workDay}
-                            ${
-                              item.isFreeDay
-                                ? "<span style=`color: '#F2BD27'`>加班</span>"
-                                : ""
-                            }
-                          </td>
-                          <td>
-                            ${item.convertTime || 0}
-                          </td>
-                          <td>
-                            ${item.hour}(h)<br />
-                            ${item.minutes}(mins)
-                          </td>
-                          <td ${renderTipColor(item.diffHour)}>
-                            ${item.convertDiffTime || 0}
-                          </td>
-                          <td>
-                            ${item.startTime}<br/>
-                            ${
-                              item.ignoreForgetDK && item.missDKType === 1
-                                ? "(忘记打卡)"
-                                : ""
-                            }
-                            ${
-                              item.forceFreeBeginTime
-                                ? `<br />${item.forceFreeBeginTime}(请假)`
-                                : ""
-                            }
-                          </td>
-                          <td>
-                            ${item.endTime}<br/>
-                            ${
-                              item.ignoreForgetDK && item.missDKType === 2
-                                ? "(忘记打卡)"
-                                : ""
-                            }
-                            ${
-                              item.forceFreeBeginTime
-                                ? `<br />${item.forceFreeEndTime}(请假)`
-                                : ""
-                            }
-                          </td>
-                          <td>
-                            ${item.convertForceFreeTotalTime || "-"}
-                          </td>
-                          ${
-                            item.rowspan > 0
-                              ? `<td rowspan=${item.rowspan}>
-                                    <div>
-                                      本月第${item.convertWeekNumber}周
-                                    </div>
-                                    <div style="padding: 8px 0">
-                                      周工时：${item.convertWeekTime}
-                                    </div>
-                                    <div ${renderTipColor(item.diffWeekHour)}>
-                                      ${
-                                        item.diffWeekHour > 0
-                                          ? `可调休：${item.convertDiffWeekTime}`
-                                          : `工时不足：${item.convertDiffWeekTime}`
-                                      }
-                                    </div>
-                                  </td>
-                                `
-                              : ""
-                          }
-                        </tr>
-                      `;
-                  })
-                  .join("")}
-              </tbody>
-            </table>
-        `;
-
-  tableContentDom.innerHTML = tableContent;
-}
-
-function showCutDownTime() {
-  let clear = () => {};
-  const djsHandler = () => {
-    clear();
-    clear = djs();
-  };
-  djsHandler();
-  document.addEventListener("visibilitychange", djsHandler);
-}
-
-const fontClassEnum = {
-  normal: "normal-font",
-  zpix: "zpix-font",
-};
-const fontClassText = {
-  [fontClassEnum.normal]: "普通字体",
-  [fontClassEnum.zpix]: "像素字体",
-};
-async function fontChangeControl() {
-  const { fontClass: localFontClass, ...params } =
-    await chrome.storage.local.get();
-  const fontChangeDom = document.querySelector("#fontChange");
-  const curFontDom = document.querySelector("#curFont");
-
-  const fontClass = localFontClass || fontClassEnum.normal;
-  curFontDom.innerHTML = fontClassText[fontClass];
-  document.body.classList.add(fontClass);
-
-  fontChangeDom.onclick = async () => {
-    const { fontClass: localFontClass } = await chrome.storage.local.get();
-    const fontClass = localFontClass || fontClassEnum.normal;
-
-    const curClass =
-      fontClassEnum.zpix === fontClass
-        ? fontClassEnum.normal
-        : fontClassEnum.zpix;
-
-    chrome.storage.local.set({ ...params, fontClass: curClass });
-
-    curFontDom.innerHTML = fontClassText[curClass];
-
-    fontClass && document.body.classList.remove(fontClass);
-    document.body.classList.add(curClass);
-  };
-}
-
-const fontSizeEnum = {
-  "font-14": "font-14",
-  "font-15": "font-15",
-  "font-16": "font-16",
-};
-
-async function fontSizeChangeControl() {
-  function setDomActive(activeClass) {
-    const parentDom = document.querySelector("#fontSizeChange");
-    const childrenDomList = [...parentDom.querySelectorAll("span")];
-    childrenDomList.forEach((i) => {
-      if (i.dataset.customkey !== activeClass) {
-        i.classList.remove("font-active");
-      } else {
-        i.classList.add("font-active");
-      }
-    });
+  if (!rowData.length) {
+    tableContentDom.innerHTML = renderEmptyState();
+    return;
   }
 
-  function setBodyFontSize(curFontSize) {
-    document.body.classList.remove(...Object.keys(fontSizeEnum));
-    document.body.classList.add(curFontSize);
+  const toneClass = getSummaryTone(renderConvertTimeText);
+  const todayWorkTime = getCurrentWorkdayText();
+  const updatedAt = updateTime
+    ? new Date(updateTime).toLocaleString("zh-CN", { hour12: false })
+    : "暂无";
+  const missPunchNotes = renderMissPunchNotes(rowData);
+
+  tableContentDom.innerHTML = `
+    <section class="summary-strip">
+      <article class="metric-card ${toneClass}">
+        <span class="metric-label">工时概览</span>
+        <strong class="metric-value">${renderConvertTimeText || "暂无数据"}</strong>
+      </article>
+      <article class="metric-card">
+        <span class="metric-label">当前日工时</span>
+        <strong class="metric-value">${todayWorkTime}</strong>
+      </article>
+      <article class="metric-card">
+        <span class="metric-label">月休假时长</span>
+        <strong class="metric-value">${convertForceFreeTotalMins || "0分钟"}</strong>
+      </article>
+      <article class="metric-card">
+        <span class="metric-label">下班倒计时</span>
+        <div>
+          <strong class="metric-value ${toneClass}" id="time">计算中...</strong>
+          <span class="metric-foot">更新：${updatedAt}</span>
+        </div>
+      </article>
+    </section>
+    <section class="table-shell">
+      <div class="table-scroll">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th scope="col">日期</th>
+              <th scope="col">上班打卡</th>
+              <th scope="col">下班打卡</th>
+              <th scope="col">工作时长</th>
+              <th scope="col">原始数据</th>
+              <th scope="col">差异值</th>
+              <th scope="col">请假时长</th>
+              <th scope="col">周工作时长</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowData
+              .map((item) => {
+                return `
+                  <tr class="${isPendingMissPunch(item) ? "pending-miss-row" : ""}">
+                    ${renderDaySummary(item)}
+                    ${renderWeekCell(item)}
+                  </tr>
+                `;
+              })
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    ${missPunchNotes}
+  `;
+}
+
+function startCountdown() {
+  let intervalId = null;
+
+  function syncCountdown() {
+    const timeDom = document.querySelector("#time");
+
+    if (!timeDom) {
+      return;
+    }
+
+    const { SB_END_TIME } = getWorkdayConfig();
+    const targetTime = new Date(
+      `${new Date().toDateString()} ${SB_END_TIME}`,
+    ).getTime();
+    const currentTime = Date.now();
+    const diff = targetTime - currentTime;
+
+    if (diff <= 0) {
+      timeDom.textContent = "别卷了，回去休息";
+      return;
+    }
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    timeDom.textContent = `${hours}小时 ${minutes}分钟 ${seconds}秒`;
   }
 
-  const parentDom = document.querySelector("#fontSizeChange");
-  const childrenDomList = [...parentDom.querySelectorAll("span")];
+  function resetCountdown() {
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
 
-  const { fontSize: localFontSize } = await chrome.storage.local.get();
-  const curFontSize = localFontSize || fontSizeEnum["font-14"];
-  setDomActive(curFontSize);
-  setBodyFontSize(curFontSize);
+    syncCountdown();
+    intervalId = setInterval(syncCountdown, 1000);
+  }
 
-  childrenDomList.forEach((dom) => {
-    dom.onclick = async (e) => {
-      const curFontSize = e.target.dataset.customkey;
-      const params = await chrome.storage.local.get();
+  resetCountdown();
+  document.addEventListener("visibilitychange", resetCountdown);
+}
 
-      setDomActive(curFontSize);
-      setBodyFontSize(curFontSize);
+async function initThemeToggle() {
+  const toggleDom = document.querySelector("#themeModeToggle");
+  const iconDom = document.querySelector("#themeModeIcon");
+  if (!toggleDom) {
+    return;
+  }
 
-      chrome.storage.local.set({ ...params, fontSize: curFontSize });
-    };
-  });
+  const { themeMode } = await getThemeSettings(chrome.storage.local);
+
+  function syncThemeButton(nextThemeMode) {
+    const iconConfig = THEME_ICON_MAP[nextThemeMode];
+    iconDom.src = iconConfig.src;
+    toggleDom.setAttribute("aria-label", iconConfig.label);
+    toggleDom.setAttribute("title", iconConfig.label);
+  }
+
+  syncThemeButton(themeMode);
+
+  toggleDom.onclick = async () => {
+    const nextThemeMode =
+      document.body.dataset.themeMode === "dark" ? "light" : "dark";
+
+    applyThemeToDocument(document, { themeMode: nextThemeMode });
+    syncThemeButton(nextThemeMode);
+    await chrome.storage.local.set({ themeMode: nextThemeMode });
+  };
 }
 
 (async () => {
+  const themeSettings = await getThemeSettings(chrome.storage.local);
+  applyThemeToDocument(document, themeSettings);
+
   const { excelData, ...restParams } = await chrome.storage.local.get();
   renderExcelData(excelData, restParams);
-  showCutDownTime();
-  fontChangeControl();
-  fontSizeChangeControl();
+  startCountdown();
+  initThemeToggle();
 })();

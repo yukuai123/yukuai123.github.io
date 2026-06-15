@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>三联动门尺寸调整</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: flex;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        background: #f0f2f5;
+      }
+      aside {
+        width: 260px;
+        background: #fff;
+        border-right: 1px solid #ddd;
+        padding: 16px;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+      aside h1 {
+        font-size: 15px;
+        margin-bottom: 14px;
+        color: #111;
+      }
+      .grp {
+        margin-bottom: 18px;
+      }
+      .grp h2 {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #999;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #444;
+      }
+      .row span {
+        min-width: 28px;
+        text-align: right;
+        font-size: 11px;
+        color: #999;
+      }
+      input[type="number"] {
+        width: 64px;
+        padding: 3px 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-size: 13px;
+        text-align: right;
+      }
+      input[type="color"] {
+        width: 38px;
+        height: 26px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+        padding: 1px;
+      }
+      main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+      }
+      #wrap svg {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      }
+      #info {
+        font-size: 12px;
+        color: #888;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <h1>三联动门尺寸调整</h1>
+
+      <div class="grp">
+        <h2>玻璃（上部）</h2>
+        <div class="row">
+          玻璃宽度<input
+            id="gW"
+            type="number"
+            value="350"
+            min="50"
+            max="1000"
+          /><span>mm</span>
+        </div>
+        <div class="row">
+          玻璃高度<input
+            id="gH"
+            type="number"
+            value="590"
+            min="50"
+            max="1500"
+          /><span>mm</span>
+        </div>
+        <div class="row">
+          横向列数<input
+            id="cols"
+            type="number"
+            value="2"
+            min="1"
+            max="8"
+          /><span>列</span>
+        </div>
+        <div class="row">
+          纵向行数<input
+            id="rows"
+            type="number"
+            value="3"
+            min="1"
+            max="8"
+          /><span>行</span>
+        </div>
+        <div class="row">
+          玻璃颜色<input id="gC" type="color" value="#c5e3f5" />
+        </div>
+      </div>
+
+      <div class="grp">
+        <h2>铝合金框条（上部）</h2>
+        <div class="row">
+          框条宽度<input
+            id="fbW"
+            type="number"
+            value="40"
+            min="5"
+            max="200"
+          /><span>mm</span>
+        </div>
+        <div class="row">
+          框条颜色<input id="fbC" type="color" value="#1a1a1a" />
+        </div>
+      </div>
+
+      <div class="grp">
+        <h2>铝合金面板（下部）</h2>
+        <div class="row">
+          高度<input
+            id="aH"
+            type="number"
+            value="560"
+            min="50"
+            max="1500"
+          /><span>mm</span>
+        </div>
+        <div class="row">
+          颜色<input id="aC" type="color" value="#1e1e1e" />
+        </div>
+        <div class="row">
+          内框颜色<input id="aiC" type="color" value="#555555" />
+        </div>
+      </div>
+
+      <div class="grp">
+        <h2>门扇</h2>
+        <div class="row">
+          门扇数量<input id="n" type="number" value="3" min="1" max="8" /><span
+            >扇</span
+          >
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div id="wrap"></div>
+      <div id="info"></div>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const v = (id) => +$(id).value;
+      const c = (id) => $(id).value;
+
+      function dimH(x1, x2, y, label) {
+        const mx = (x1 + x2) / 2;
+        return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#888" stroke-width="1" marker-start="url(#a)" marker-end="url(#a)"/>
+<line x1="${x1}" y1="${y - 3}" x2="${x1}" y2="${y + 3}" stroke="#888" stroke-width="1"/>
+<line x1="${x2}" y1="${y - 3}" x2="${x2}" y2="${y + 3}" stroke="#888" stroke-width="1"/>
+<text x="${mx}" y="${y - 5}" text-anchor="middle" font-size="10" fill="#555">${label}</text>`;
+      }
+
+      function dimV(x, y1, y2, label, off) {
+        const cx = x + off,
+          my = (y1 + y2) / 2;
+        return `<line x1="${x}" y1="${y1}" x2="${cx}" y2="${y1}" stroke="#888" stroke-width="1"/>
+<line x1="${x}" y1="${y2}" x2="${cx}" y2="${y2}" stroke="#888" stroke-width="1"/>
+<line x1="${cx}" y1="${y1}" x2="${cx}" y2="${y2}" stroke="#888" stroke-width="1" marker-start="url(#a)" marker-end="url(#a)"/>
+<text x="${cx + 4}" y="${my + 4}" font-size="10" fill="#555">${label}</text>`;
+      }
+
+      function render() {
+        const gW = v("gW"),
+          gH = v("gH"),
+          cols = v("cols"),
+          rows = v("rows");
+        const fbW = v("fbW"),
+          fbCl = c("fbC"),
+          gCl = c("gC");
+        const aH = v("aH"),
+          aCl = c("aC"),
+          aiCl = c("aiC"),
+          n = v("n");
+
+        // Door dimensions in mm
+        // width  = (cols+1) frame bars + cols glass panels
+        // upperH = (rows+1) frame bars + rows glass panels
+        const dW = (cols + 1) * fbW + cols * gW;
+        const upperH = (rows + 1) * fbW + rows * gH;
+        const dH = upperH + aH;
+        const totW = n * dW;
+
+        const avW = $("wrap").parentElement.clientWidth - 40;
+        const avH = window.innerHeight - 60;
+        const lm = 90,
+          tm = 72,
+          rm = 170,
+          bm = 50;
+        const s = Math.min((avW - lm - rm) / totW, (avH - tm - bm) / dH, 0.55);
+
+        const pw = gW * s,
+          ph = gH * s,
+          fbw = fbW * s;
+        const pdw = dW * s,
+          puH = upperH * s,
+          pdh = dH * s,
+          paH = aH * s;
+        const NAMES = "一二三四五六七八";
+
+        let g = "";
+        for (let i = 0; i < n; i++) {
+          const ox = lm + i * pdw;
+
+          // Upper section: frame background fills everything, glass drawn on top
+          g += `<rect x="${ox}" y="${tm}" width="${pdw}" height="${puH}" fill="${fbCl}"/>`;
+          for (let r = 0; r < rows; r++) {
+            for (let cc = 0; cc < cols; cc++) {
+              const gx = ox + (cc + 1) * fbw + cc * pw;
+              const gy = tm + (r + 1) * fbw + r * ph;
+              g += `<rect x="${gx}" y="${gy}" width="${pw}" height="${ph}" fill="${gCl}"/>`;
+            }
+          }
+
+          // Lower aluminum panel
+          const ay = tm + puH;
+          g += `<rect x="${ox}" y="${ay}" width="${pdw}" height="${paH}" fill="${aCl}"/>`;
+          const pad = Math.min(8, paH * 0.08, pdw * 0.04);
+          if (paH > 16 && pdw > 20)
+            g += `<rect x="${ox + pad}" y="${ay + pad}" width="${pdw - 2 * pad}" height="${paH - 2 * pad}" fill="none" stroke="${aiCl}" stroke-width="1.5" rx="2"/>`;
+          if (paH > 28 && pdw > 36)
+            g += `<rect x="${ox + 2 * pad}" y="${ay + 2 * pad}" width="${pdw - 4 * pad}" height="${paH - 4 * pad}" fill="none" stroke="${aiCl}" stroke-width="0.8" rx="1"/>`;
+
+          // Door label
+          g += `<text x="${ox + pdw / 2}" y="${tm + pdh + 16}" text-anchor="middle" font-size="12" fill="#444">第${NAMES[i]}扇</text>`;
+        }
+
+        // Dimension lines
+        // Top: frame bar width, glass width, door width, total width
+        g += dimH(lm, lm + fbw, tm - 10, `${fbW}mm`);
+        g += dimH(lm + fbw, lm + fbw + pw, tm - 10, `${gW}mm`);
+        g += dimH(lm, lm + pdw, tm - 24, `${dW}mm/扇`);
+        g += dimH(lm, lm + n * pdw, tm - 38, `总宽${totW}mm`);
+
+        // Right: frame bar, glass height, upper total, lower, total
+        const rx = lm + n * pdw + 6;
+        g += dimV(rx, tm, tm + fbw, `${fbW}mm`, 14);
+        g += dimV(rx + 32, tm, tm + fbw + ph, `${fbW + gH}mm`, 14);
+        g += dimV(rx, tm + fbw, tm + fbw + ph, `${gH}mm`, 14);
+        g += dimV(rx + 64, tm, tm + puH, `${upperH}mm`, 14);
+        g += dimV(rx, tm + puH, tm + pdh, `${aH}mm`, 14);
+        g += dimV(rx + 96, tm, tm + pdh, `总高${dH}mm`, 14);
+
+        const W = lm + n * pdw + rm;
+        const H = tm + pdh + bm;
+
+        $("wrap").innerHTML =
+          `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif">
+<defs><marker id="a" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+<path d="M0,0L8,4L0,8Z" fill="#777"/></marker></defs>
+<rect width="${W}" height="${H}" fill="#f9f9f9"/>
+${g}</svg>`;
+
+        $("info").textContent =
+          `每扇：${dW}×${dH}mm  总宽：${totW}mm（比例${(s * 100).toFixed(0)}%）`;
+      }
+
+      document
+        .querySelectorAll("input")
+        .forEach((el) => el.addEventListener("input", render));
+      window.addEventListener("resize", render);
+      render();
+    </script>
+  </body>
+</html>

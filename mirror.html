@@ -1,642 +1,888 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>浴室镜柜尺寸调节器</title>
-  <style>
-    :root {
-      --ink: #1d2526;
-      --muted: #687574;
-      --line: #c8d3d0;
-      --panel: #f7faf8;
-      --wall: #eef3ef;
-      --floor: #d8ddd6;
-      --mirror: #c9fbfb;
-      --door: #fbfbfa;
-      --vanity: #8d9490;
-      --accent: #e84d2a;
-      --blue: #234dff;
-      --warn: #b83220;
-      --ok: #11745f;
-      --shadow: 0 18px 55px rgba(24, 40, 36, .12);
-    }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>浴室镜柜尺寸调节器</title>
+    <style>
+      :root {
+        --ink: #1d2526;
+        --muted: #687574;
+        --line: #c8d3d0;
+        --panel: #f7faf8;
+        --wall: #eef3ef;
+        --floor: #d8ddd6;
+        --mirror: #c9fbfb;
+        --door: #fbfbfa;
+        --vanity: #8d9490;
+        --accent: #e84d2a;
+        --blue: #234dff;
+        --warn: #b83220;
+        --ok: #11745f;
+        --shadow: 0 18px 55px rgba(24, 40, 36, 0.12);
+      }
 
-    * {
-      box-sizing: border-box;
-    }
+      * {
+        box-sizing: border-box;
+      }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        linear-gradient(90deg, rgba(29, 37, 38, .04) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(29, 37, 38, .04) 1px, transparent 1px),
-        #e8eee9;
-      background-size: 24px 24px;
-      color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(90deg, rgba(29, 37, 38, 0.04) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(29, 37, 38, 0.04) 1px, transparent 1px),
+          #e8eee9;
+        background-size: 24px 24px;
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
 
-    .app {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 390px;
-      gap: 20px;
-      width: min(1480px, 100%);
-      min-height: 100vh;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .stage,
-    .controls {
-      border: 1px solid rgba(29, 37, 38, .12);
-      background: rgba(247, 250, 248, .94);
-      box-shadow: var(--shadow);
-    }
-
-    .stage {
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
-      min-height: calc(100vh - 40px);
-      overflow: hidden;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
-      background: #fbfdfb;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.2;
-      letter-spacing: 0;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    button {
-      appearance: none;
-      min-height: 36px;
-      border: 1px solid #aebdb8;
-      border-radius: 6px;
-      background: #ffffff;
-      color: var(--ink);
-      padding: 0 12px;
-      font: inherit;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      border-color: #72827d;
-      background: #f4f8f6;
-    }
-
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible {
-      outline: 3px solid rgba(35, 77, 255, .22);
-      outline-offset: 2px;
-    }
-
-    .drawing-wrap {
-      display: grid;
-      place-items: center;
-      min-height: 0;
-      padding: 12px;
-      background: linear-gradient(#f9fbf8, #eef3ef);
-    }
-
-    svg {
-      width: 100%;
-      height: min(78vh, 760px);
-      min-height: 460px;
-      display: block;
-    }
-
-    .readout {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1px;
-      border-top: 1px solid var(--line);
-      background: var(--line);
-    }
-
-    .metric {
-      min-width: 0;
-      padding: 12px 14px;
-      background: #fbfdfb;
-    }
-
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.25;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .metric strong {
-      display: block;
-      margin-top: 3px;
-      font-size: 18px;
-      line-height: 1.1;
-      white-space: nowrap;
-    }
-
-    .controls {
-      min-height: calc(100vh - 40px);
-      overflow: auto;
-    }
-
-    .controls-header {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(247, 250, 248, .96);
-      backdrop-filter: blur(10px);
-    }
-
-    .controls-header h2 {
-      margin: 0;
-      font-size: 17px;
-      line-height: 1.2;
-    }
-
-    .status {
-      margin-top: 8px;
-      color: var(--ok);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-
-    .status.warn {
-      color: var(--warn);
-    }
-
-    fieldset {
-      margin: 0;
-      padding: 16px;
-      border: 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    legend {
-      margin: 0 0 12px;
-      padding: 0;
-      color: var(--ink);
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    .control {
-      display: grid;
-      grid-template-columns: 118px minmax(0, 1fr) 92px;
-      align-items: center;
-      gap: 10px;
-      min-height: 42px;
-      margin-top: 10px;
-    }
-
-    .control:first-of-type {
-      margin-top: 0;
-    }
-
-    label,
-    .label {
-      color: #35413f;
-      font-size: 13px;
-      line-height: 1.2;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent);
-    }
-
-    input[type="number"],
-    select {
-      width: 100%;
-      height: 34px;
-      border: 1px solid #b8c6c1;
-      border-radius: 6px;
-      background: #ffffff;
-      color: var(--ink);
-      padding: 0 8px;
-      font: inherit;
-      font-size: 13px;
-    }
-
-    .toggle-line {
-      display: grid;
-      grid-template-columns: 118px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-height: 38px;
-      margin-top: 10px;
-    }
-
-    .toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      width: fit-content;
-      color: var(--ink);
-      font-size: 13px;
-    }
-
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--blue);
-    }
-
-    .segmented {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border: 1px solid #b8c6c1;
-      border-radius: 7px;
-      overflow: hidden;
-      background: #fff;
-    }
-
-    .segmented input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .segmented label {
-      display: grid;
-      place-items: center;
-      min-height: 34px;
-      padding: 0 8px;
-      color: var(--muted);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .segmented input:checked + label {
-      background: var(--ink);
-      color: #fff;
-    }
-
-    .note {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%) translateY(18px);
-      opacity: 0;
-      pointer-events: none;
-      border-radius: 6px;
-      background: var(--ink);
-      color: #fff;
-      padding: 10px 14px;
-      font-size: 13px;
-      transition: opacity .18s ease, transform .18s ease;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    @media (max-width: 1040px) {
       .app {
-        grid-template-columns: 1fr;
-        padding: 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 390px;
+        gap: 20px;
+        width: min(1480px, 100%);
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: 20px;
       }
 
       .stage,
       .controls {
-        min-height: auto;
+        border: 1px solid rgba(29, 37, 38, 0.12);
+        background: rgba(247, 250, 248, 0.94);
+        box-shadow: var(--shadow);
+      }
+
+      .stage {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        min-height: calc(100vh - 40px);
+        overflow: hidden;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfdfb;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        appearance: none;
+        min-height: 36px;
+        border: 1px solid #aebdb8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        padding: 0 12px;
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: #72827d;
+        background: #f4f8f6;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 3px solid rgba(35, 77, 255, 0.22);
+        outline-offset: 2px;
+      }
+
+      .drawing-wrap {
+        display: grid;
+        place-items: center;
+        min-height: 0;
+        padding: 12px;
+        background: linear-gradient(#f9fbf8, #eef3ef);
       }
 
       svg {
-        height: 62vh;
-      }
-
-      .controls {
-        overflow: visible;
-      }
-    }
-
-    @media (max-width: 680px) {
-      .topbar {
-        align-items: flex-start;
-        flex-direction: column;
+        width: 100%;
+        height: min(78vh, 760px);
+        min-height: 460px;
+        display: block;
       }
 
       .readout {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        border-top: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .metric {
+        min-width: 0;
+        padding: 12px 14px;
+        background: #fbfdfb;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 3px;
+        font-size: 18px;
+        line-height: 1.1;
+        white-space: nowrap;
+      }
+
+      .controls {
+        min-height: calc(100vh - 40px);
+        overflow: auto;
+      }
+
+      .controls-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: 16px 16px 12px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(247, 250, 248, 0.96);
+        backdrop-filter: blur(10px);
+      }
+
+      .controls-header h2 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.2;
+      }
+
+      .status {
+        margin-top: 8px;
+        color: var(--ok);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .status.warn {
+        color: var(--warn);
+      }
+
+      fieldset {
+        margin: 0;
+        padding: 16px;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      legend {
+        margin: 0 0 12px;
+        padding: 0;
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 14px;
       }
 
       .control {
-        grid-template-columns: 1fr;
-        gap: 6px;
-        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr) 92px;
+        align-items: center;
+        gap: 10px;
+        min-height: 42px;
+        margin-top: 10px;
+      }
+
+      .control:first-of-type {
+        margin-top: 0;
+      }
+
+      label,
+      .label {
+        color: #35413f;
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+
+      input[type="number"],
+      select {
+        width: 100%;
+        height: 34px;
+        border: 1px solid #b8c6c1;
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        padding: 0 8px;
+        font: inherit;
+        font-size: 13px;
       }
 
       .toggle-line {
-        grid-template-columns: 1fr;
-        gap: 7px;
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        min-height: 38px;
+        margin-top: 10px;
       }
 
-      svg {
-        min-height: 380px;
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        color: var(--ink);
+        font-size: 13px;
       }
-    }
-  </style>
-</head>
-<body>
-  <main class="app">
-    <section class="stage" aria-label="尺寸预览">
-      <div class="topbar">
-        <h1>浴室镜柜尺寸调节器</h1>
-        <div class="actions">
-          <button type="button" id="copySpec">复制尺寸</button>
-          <button type="button" id="reset">恢复默认</button>
-        </div>
-      </div>
 
-      <div class="drawing-wrap">
-        <svg id="drawing" role="img" aria-label="浴室镜柜和洗漱台尺寸示意图"></svg>
-      </div>
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--blue);
+      }
 
-      <div class="readout" aria-live="polite">
-        <div class="metric">
-          <span>镜柜总宽</span>
-          <strong id="cabinetTotal">1420 mm</strong>
-        </div>
-        <div class="metric">
-          <span>镜柜上沿离地</span>
-          <strong id="cabinetTop">1700 mm</strong>
-        </div>
-        <div class="metric">
-          <span>洗漱台上沿离地</span>
-          <strong id="vanityTop">550 mm</strong>
-        </div>
-        <div class="metric">
-          <span>镜柜左右余量</span>
-          <strong id="sideClearance">10 mm</strong>
-        </div>
-      </div>
-    </section>
+      .segmented {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid #b8c6c1;
+        border-radius: 7px;
+        overflow: hidden;
+        background: #fff;
+      }
 
-    <aside class="controls" aria-label="尺寸控制">
-      <div class="controls-header">
-        <h2>尺寸参数</h2>
-        <div id="status" class="status">当前尺寸在空间范围内。</div>
-      </div>
+      .segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
 
-      <fieldset>
-        <legend>空间</legend>
-        <div class="control">
-          <label for="roomWidth">空间宽度</label>
-          <input id="roomWidth" data-key="roomWidth" type="range" min="900" max="2400" step="10">
-          <input data-number="roomWidth" type="number" min="900" max="2400" step="10" aria-label="空间宽度 mm">
-        </div>
-        <div class="control">
-          <label for="roomHeight">空间高度</label>
-          <input id="roomHeight" data-key="roomHeight" type="range" min="1600" max="3000" step="10">
-          <input data-number="roomHeight" type="number" min="1600" max="3000" step="10" aria-label="空间高度 mm">
-        </div>
-      </fieldset>
+      .segmented label {
+        display: grid;
+        place-items: center;
+        min-height: 34px;
+        padding: 0 8px;
+        color: var(--muted);
+        cursor: pointer;
+        user-select: none;
+      }
 
-      <fieldset>
-        <legend>镜柜</legend>
-        <div class="control">
-          <label for="cabinetHeight">镜柜高度</label>
-          <input id="cabinetHeight" data-key="cabinetHeight" type="range" min="300" max="1200" step="10">
-          <input data-number="cabinetHeight" type="number" min="300" max="1200" step="10" aria-label="镜柜高度 mm">
-        </div>
-        <div class="control">
-          <label for="leftWidth">左侧宽度</label>
-          <input id="leftWidth" data-key="leftWidth" type="range" min="300" max="1300" step="10">
-          <input data-number="leftWidth" type="number" min="300" max="1300" step="10" aria-label="左侧宽度 mm">
-        </div>
-        <div class="control">
-          <label for="rightWidth">右侧宽度</label>
-          <input id="rightWidth" data-key="rightWidth" type="range" min="200" max="1000" step="10">
-          <input data-number="rightWidth" type="number" min="200" max="1000" step="10" aria-label="右侧宽度 mm">
-        </div>
-        <div class="control">
-          <label for="cabinetOffset">水平偏移</label>
-          <input id="cabinetOffset" data-key="cabinetOffset" type="range" min="-300" max="300" step="10">
-          <input data-number="cabinetOffset" type="number" min="-300" max="300" step="10" aria-label="镜柜水平偏移 mm">
-        </div>
-        <div class="control">
-          <label for="gap">台面到镜柜</label>
-          <input id="gap" data-key="gap" type="range" min="100" max="900" step="10">
-          <input data-number="gap" type="number" min="100" max="900" step="10" aria-label="洗漱台和镜柜之间距离 mm">
-        </div>
-        <div class="toggle-line">
-          <span class="label">灯带</span>
-          <label class="toggle"><input id="showLights" type="checkbox" checked>显示上下灯带</label>
-        </div>
-        <div class="control">
-          <label for="lightHeight">灯带厚度</label>
-          <input id="lightHeight" data-key="lightHeight" type="range" min="5" max="50" step="1">
-          <input data-number="lightHeight" type="number" min="5" max="50" step="1" aria-label="灯带厚度 mm">
-        </div>
-      </fieldset>
+      .segmented input:checked + label {
+        background: var(--ink);
+        color: #fff;
+      }
 
-      <fieldset>
-        <legend>洗漱台</legend>
-        <div class="toggle-line">
-          <span class="label">离地口径</span>
-          <div class="segmented" role="radiogroup" aria-label="洗漱台离地高度定义">
-            <input id="groundTop" name="groundMode" type="radio" value="top" checked>
-            <label for="groundTop">上沿离地</label>
-            <input id="groundBottom" name="groundMode" type="radio" value="bottom">
-            <label for="groundBottom">下沿离地</label>
+      .note {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%) translateY(18px);
+        opacity: 0;
+        pointer-events: none;
+        border-radius: 6px;
+        background: var(--ink);
+        color: #fff;
+        padding: 10px 14px;
+        font-size: 13px;
+        transition:
+          opacity 0.18s ease,
+          transform 0.18s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (max-width: 1040px) {
+        .app {
+          grid-template-columns: 1fr;
+          padding: 12px;
+        }
+
+        .stage,
+        .controls {
+          min-height: auto;
+        }
+
+        svg {
+          height: 62vh;
+        }
+
+        .controls {
+          overflow: visible;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .readout {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .control {
+          grid-template-columns: 1fr;
+          gap: 6px;
+          margin-top: 16px;
+        }
+
+        .toggle-line {
+          grid-template-columns: 1fr;
+          gap: 7px;
+        }
+
+        svg {
+          min-height: 380px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="stage" aria-label="尺寸预览">
+        <div class="topbar">
+          <h1>浴室镜柜尺寸调节器</h1>
+          <div class="actions">
+            <button type="button" id="copySpec">复制尺寸</button>
+            <button type="button" id="reset">恢复默认</button>
           </div>
         </div>
-        <div class="control">
-          <label for="vanityWidth">洗漱台宽度</label>
-          <input id="vanityWidth" data-key="vanityWidth" type="range" min="600" max="2200" step="10">
-          <input data-number="vanityWidth" type="number" min="600" max="2200" step="10" aria-label="洗漱台宽度 mm">
+
+        <div class="drawing-wrap">
+          <svg
+            id="drawing"
+            role="img"
+            aria-label="浴室镜柜和洗漱台尺寸示意图"
+          ></svg>
         </div>
-        <div class="control">
-          <label for="vanityHeight">洗漱台高度</label>
-          <input id="vanityHeight" data-key="vanityHeight" type="range" min="80" max="350" step="10">
-          <input data-number="vanityHeight" type="number" min="80" max="350" step="10" aria-label="洗漱台高度 mm">
+
+        <div class="readout" aria-live="polite">
+          <div class="metric">
+            <span>镜柜总宽</span>
+            <strong id="cabinetTotal">1420 mm</strong>
+          </div>
+          <div class="metric">
+            <span>镜柜上沿离地</span>
+            <strong id="cabinetTop">1700 mm</strong>
+          </div>
+          <div class="metric">
+            <span>洗漱台上沿离地</span>
+            <strong id="vanityTop">550 mm</strong>
+          </div>
+          <div class="metric">
+            <span>镜柜左右余量</span>
+            <strong id="sideClearance">10 mm</strong>
+          </div>
         </div>
-        <div class="control">
-          <label for="vanityGround">离地高度</label>
-          <input id="vanityGround" data-key="vanityGround" type="range" min="300" max="1000" step="10">
-          <input data-number="vanityGround" type="number" min="300" max="1000" step="10" aria-label="洗漱台离地高度 mm">
+      </section>
+
+      <aside class="controls" aria-label="尺寸控制">
+        <div class="controls-header">
+          <h2>尺寸参数</h2>
+          <div id="status" class="status">当前尺寸在空间范围内。</div>
         </div>
-      </fieldset>
-    </aside>
-  </main>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        <fieldset>
+          <legend>空间</legend>
+          <div class="control">
+            <label for="roomWidth">空间宽度</label>
+            <input
+              id="roomWidth"
+              data-key="roomWidth"
+              type="range"
+              min="900"
+              max="2400"
+              step="10"
+            />
+            <input
+              data-number="roomWidth"
+              type="number"
+              min="900"
+              max="2400"
+              step="10"
+              aria-label="空间宽度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="roomHeight">空间高度</label>
+            <input
+              id="roomHeight"
+              data-key="roomHeight"
+              type="range"
+              min="1600"
+              max="3000"
+              step="10"
+            />
+            <input
+              data-number="roomHeight"
+              type="number"
+              min="1600"
+              max="3000"
+              step="10"
+              aria-label="空间高度 mm"
+            />
+          </div>
+        </fieldset>
 
-  <script>
-    const defaults = {
-      roomWidth: 1440,
-      roomHeight: 2200,
-      cabinetHeight: 750,
-      leftWidth: 830,
-      rightWidth: 590,
-      cabinetOffset: 0,
-      gap: 400,
-      vanityWidth: 1440,
-      vanityHeight: 150,
-      vanityGround: 550,
-      lightHeight: 20,
-      showLights: true,
-      groundMode: "top"
-    };
+        <fieldset>
+          <legend>镜柜</legend>
+          <div class="control">
+            <label for="cabinetHeight">镜柜高度</label>
+            <input
+              id="cabinetHeight"
+              data-key="cabinetHeight"
+              type="range"
+              min="300"
+              max="1200"
+              step="10"
+            />
+            <input
+              data-number="cabinetHeight"
+              type="number"
+              min="300"
+              max="1200"
+              step="10"
+              aria-label="镜柜高度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="leftWidth">左侧宽度</label>
+            <input
+              id="leftWidth"
+              data-key="leftWidth"
+              type="range"
+              min="300"
+              max="1300"
+              step="10"
+            />
+            <input
+              data-number="leftWidth"
+              type="number"
+              min="300"
+              max="1300"
+              step="10"
+              aria-label="左侧宽度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="leftSplitWidth">左侧分割线</label>
+            <input
+              id="leftSplitWidth"
+              data-key="leftSplitWidth"
+              type="range"
+              min="80"
+              max="1200"
+              step="1"
+            />
+            <input
+              data-number="leftSplitWidth"
+              type="number"
+              min="80"
+              max="1200"
+              step="1"
+              aria-label="左侧分割线左边宽度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="rightWidth">右侧宽度</label>
+            <input
+              id="rightWidth"
+              data-key="rightWidth"
+              type="range"
+              min="200"
+              max="1000"
+              step="10"
+            />
+            <input
+              data-number="rightWidth"
+              type="number"
+              min="200"
+              max="1000"
+              step="10"
+              aria-label="右侧宽度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="cabinetOffset">水平偏移</label>
+            <input
+              id="cabinetOffset"
+              data-key="cabinetOffset"
+              type="range"
+              min="-300"
+              max="300"
+              step="10"
+            />
+            <input
+              data-number="cabinetOffset"
+              type="number"
+              min="-300"
+              max="300"
+              step="10"
+              aria-label="镜柜水平偏移 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="gap">台面到镜柜</label>
+            <input
+              id="gap"
+              data-key="gap"
+              type="range"
+              min="100"
+              max="900"
+              step="10"
+            />
+            <input
+              data-number="gap"
+              type="number"
+              min="100"
+              max="900"
+              step="10"
+              aria-label="洗漱台和镜柜之间距离 mm"
+            />
+          </div>
+          <div class="toggle-line">
+            <span class="label">灯带</span>
+            <label class="toggle"
+              ><input
+                id="showLights"
+                type="checkbox"
+                checked
+              />显示上下灯带</label
+            >
+          </div>
+          <div class="control">
+            <label for="lightHeight">灯带厚度</label>
+            <input
+              id="lightHeight"
+              data-key="lightHeight"
+              type="range"
+              min="5"
+              max="50"
+              step="1"
+            />
+            <input
+              data-number="lightHeight"
+              type="number"
+              min="5"
+              max="50"
+              step="1"
+              aria-label="灯带厚度 mm"
+            />
+          </div>
+        </fieldset>
 
-    const state = { ...defaults };
-    const svg = document.getElementById("drawing");
-    const statusEl = document.getElementById("status");
-    const toast = document.getElementById("toast");
+        <fieldset>
+          <legend>洗漱台</legend>
+          <div class="toggle-line">
+            <span class="label">离地口径</span>
+            <div
+              class="segmented"
+              role="radiogroup"
+              aria-label="洗漱台离地高度定义"
+            >
+              <input
+                id="groundTop"
+                name="groundMode"
+                type="radio"
+                value="top"
+                checked
+              />
+              <label for="groundTop">上沿离地</label>
+              <input
+                id="groundBottom"
+                name="groundMode"
+                type="radio"
+                value="bottom"
+              />
+              <label for="groundBottom">下沿离地</label>
+            </div>
+          </div>
+          <div class="control">
+            <label for="vanityWidth">洗漱台宽度</label>
+            <input
+              id="vanityWidth"
+              data-key="vanityWidth"
+              type="range"
+              min="600"
+              max="2200"
+              step="10"
+            />
+            <input
+              data-number="vanityWidth"
+              type="number"
+              min="600"
+              max="2200"
+              step="10"
+              aria-label="洗漱台宽度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="vanityHeight">洗漱台高度</label>
+            <input
+              id="vanityHeight"
+              data-key="vanityHeight"
+              type="range"
+              min="80"
+              max="350"
+              step="10"
+            />
+            <input
+              data-number="vanityHeight"
+              type="number"
+              min="80"
+              max="350"
+              step="10"
+              aria-label="洗漱台高度 mm"
+            />
+          </div>
+          <div class="control">
+            <label for="vanityGround">离地高度</label>
+            <input
+              id="vanityGround"
+              data-key="vanityGround"
+              type="range"
+              min="300"
+              max="1000"
+              step="10"
+            />
+            <input
+              data-number="vanityGround"
+              type="number"
+              min="300"
+              max="1000"
+              step="10"
+              aria-label="洗漱台离地高度 mm"
+            />
+          </div>
+        </fieldset>
+      </aside>
+    </main>
 
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
-    }
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    function readNumber(input) {
-      const min = Number(input.min);
-      const max = Number(input.max);
-      const value = Number(input.value);
-      return clamp(Number.isFinite(value) ? value : min, min, max);
-    }
-
-    function syncInputs() {
-      document.querySelectorAll("[data-key]").forEach((input) => {
-        input.value = state[input.dataset.key];
-      });
-      document.querySelectorAll("[data-number]").forEach((input) => {
-        input.value = state[input.dataset.number];
-      });
-      document.getElementById("showLights").checked = state.showLights;
-      document.querySelectorAll("input[name='groundMode']").forEach((input) => {
-        input.checked = input.value === state.groundMode;
-      });
-    }
-
-    function geometry() {
-      const vanityTop = state.groundMode === "top"
-        ? state.vanityGround
-        : state.vanityGround + state.vanityHeight;
-      const vanityBottom = vanityTop - state.vanityHeight;
-      const cabinetBottom = vanityTop + state.gap;
-      const cabinetTop = cabinetBottom + state.cabinetHeight;
-      const cabinetWidth = state.leftWidth + state.rightWidth;
-      const cabinetX = (state.roomWidth - cabinetWidth) / 2 + state.cabinetOffset;
-      const vanityX = (state.roomWidth - state.vanityWidth) / 2;
-
-      return {
-        vanityTop,
-        vanityBottom,
-        cabinetBottom,
-        cabinetTop,
-        cabinetWidth,
-        cabinetX,
-        vanityX
+    <script>
+      const defaults = {
+        roomWidth: 1440,
+        roomHeight: 2200,
+        cabinetHeight: 750,
+        leftWidth: 830,
+        leftSplitWidth: 317,
+        rightWidth: 590,
+        cabinetOffset: 0,
+        gap: 400,
+        vanityWidth: 1440,
+        vanityHeight: 150,
+        vanityGround: 550,
+        lightHeight: 20,
+        showLights: true,
+        groundMode: "top",
       };
-    }
 
-    function render() {
-      const g = geometry();
-      const scene = {
-        width: 1040,
-        height: 650,
-        padLeft: 88,
-        padRight: 118,
-        padTop: 58,
-        padBottom: 84
-      };
+      const state = { ...defaults };
+      const svg = document.getElementById("drawing");
+      const statusEl = document.getElementById("status");
+      const toast = document.getElementById("toast");
 
-      const minX = Math.min(0, g.cabinetX, g.vanityX) - 90;
-      const maxX = Math.max(state.roomWidth, g.cabinetX + g.cabinetWidth, g.vanityX + state.vanityWidth) + 90;
-      const minY = Math.min(0, g.vanityBottom) - 90;
-      const maxY = Math.max(state.roomHeight, g.cabinetTop) + 90;
-      const usableW = scene.width - scene.padLeft - scene.padRight;
-      const usableH = scene.height - scene.padTop - scene.padBottom;
-      const scale = Math.min(usableW / (maxX - minX), usableH / (maxY - minY));
-      const offsetX = (usableW - (maxX - minX) * scale) / 2;
-      const offsetY = (usableH - (maxY - minY) * scale) / 2;
-      const x = (mm) => scene.padLeft + offsetX + (mm - minX) * scale;
-      const y = (mm) => scene.padTop + offsetY + (maxY - mm) * scale;
-      const w = (mm) => mm * scale;
-      const h = (mm) => mm * scale;
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
 
-      const roomX = x(0);
-      const roomY = y(state.roomHeight);
-      const roomW = w(state.roomWidth);
-      const roomH = h(state.roomHeight);
-      const floorY = y(0);
-      const cabinetY = y(g.cabinetTop);
-      const cabinetH = h(state.cabinetHeight);
-      const vanityY = y(g.vanityTop);
-      const vanityH = h(state.vanityHeight);
-      const groundMeasureY = state.groundMode === "top" ? g.vanityTop : g.vanityBottom;
+      function readNumber(input) {
+        const min = Number(input.min);
+        const max = Number(input.max);
+        const value = Number(input.value);
+        return clamp(Number.isFinite(value) ? value : min, min, max);
+      }
 
-      const markerFor = (color) => color === "blueDim" ? "arrowBlue" : "arrowRed";
+      function syncInputs() {
+        const leftSplitMax = Math.max(80, state.leftWidth - 80);
+        state.leftSplitWidth = clamp(state.leftSplitWidth, 80, leftSplitMax);
+        document
+          .querySelectorAll(
+            '[data-key="leftSplitWidth"], [data-number="leftSplitWidth"]',
+          )
+          .forEach((input) => {
+            input.max = leftSplitMax;
+          });
+        document.querySelectorAll("[data-key]").forEach((input) => {
+          input.value = state[input.dataset.key];
+        });
+        document.querySelectorAll("[data-number]").forEach((input) => {
+          input.value = state[input.dataset.number];
+        });
+        document.getElementById("showLights").checked = state.showLights;
+        document
+          .querySelectorAll("input[name='groundMode']")
+          .forEach((input) => {
+            input.checked = input.value === state.groundMode;
+          });
+      }
 
-      const dimH = (x1, x2, yy, label, color = "dim") => `
+      function geometry() {
+        const vanityTop =
+          state.groundMode === "top"
+            ? state.vanityGround
+            : state.vanityGround + state.vanityHeight;
+        const vanityBottom = vanityTop - state.vanityHeight;
+        const cabinetBottom = vanityTop + state.gap;
+        const cabinetTop = cabinetBottom + state.cabinetHeight;
+        const cabinetWidth = state.leftWidth + state.rightWidth;
+        const cabinetX =
+          (state.roomWidth - cabinetWidth) / 2 + state.cabinetOffset;
+        const vanityX = (state.roomWidth - state.vanityWidth) / 2;
+
+        return {
+          vanityTop,
+          vanityBottom,
+          cabinetBottom,
+          cabinetTop,
+          cabinetWidth,
+          cabinetX,
+          vanityX,
+        };
+      }
+
+      function render() {
+        const g = geometry();
+        const scene = {
+          width: 1040,
+          height: 650,
+          padLeft: 88,
+          padRight: 118,
+          padTop: 58,
+          padBottom: 84,
+        };
+
+        const minX = Math.min(0, g.cabinetX, g.vanityX) - 90;
+        const maxX =
+          Math.max(
+            state.roomWidth,
+            g.cabinetX + g.cabinetWidth,
+            g.vanityX + state.vanityWidth,
+          ) + 90;
+        const minY = Math.min(0, g.vanityBottom) - 90;
+        const maxY = Math.max(state.roomHeight, g.cabinetTop) + 90;
+        const usableW = scene.width - scene.padLeft - scene.padRight;
+        const usableH = scene.height - scene.padTop - scene.padBottom;
+        const scale = Math.min(
+          usableW / (maxX - minX),
+          usableH / (maxY - minY),
+        );
+        const offsetX = (usableW - (maxX - minX) * scale) / 2;
+        const offsetY = (usableH - (maxY - minY) * scale) / 2;
+        const x = (mm) => scene.padLeft + offsetX + (mm - minX) * scale;
+        const y = (mm) => scene.padTop + offsetY + (maxY - mm) * scale;
+        const w = (mm) => mm * scale;
+        const h = (mm) => mm * scale;
+
+        const roomX = x(0);
+        const roomY = y(state.roomHeight);
+        const roomW = w(state.roomWidth);
+        const roomH = h(state.roomHeight);
+        const floorY = y(0);
+        const cabinetY = y(g.cabinetTop);
+        const cabinetH = h(state.cabinetHeight);
+        const vanityY = y(g.vanityTop);
+        const vanityH = h(state.vanityHeight);
+        const groundMeasureY =
+          state.groundMode === "top" ? g.vanityTop : g.vanityBottom;
+        const leftSplitWidth = clamp(
+          state.leftSplitWidth,
+          80,
+          Math.max(80, state.leftWidth - 80),
+        );
+        const leftSplitRightWidth = state.leftWidth - leftSplitWidth;
+
+        const markerFor = (color) =>
+          color === "blueDim" ? "arrowBlue" : "arrowRed";
+
+        const dimH = (x1, x2, yy, label, color = "dim") => `
         <line class="${color}" x1="${x1}" y1="${yy}" x2="${x2}" y2="${yy}" marker-start="url(#${markerFor(color)})" marker-end="url(#${markerFor(color)})"></line>
         <line class="${color}" x1="${x1}" y1="${yy - 9}" x2="${x1}" y2="${yy + 9}"></line>
         <line class="${color}" x1="${x2}" y1="${yy - 9}" x2="${x2}" y2="${yy + 9}"></line>
         <text class="${color} label" x="${(x1 + x2) / 2}" y="${yy - 8}" text-anchor="middle">${label}</text>
       `;
 
-      const dimV = (xx, y1, y2, label, color = "dim", anchor = "start") => `
+        const dimV = (xx, y1, y2, label, color = "dim", anchor = "start") => `
         <line class="${color}" x1="${xx}" y1="${y1}" x2="${xx}" y2="${y2}" marker-start="url(#${markerFor(color)})" marker-end="url(#${markerFor(color)})"></line>
         <line class="${color}" x1="${xx - 9}" y1="${y1}" x2="${xx + 9}" y2="${y1}"></line>
         <line class="${color}" x1="${xx - 9}" y1="${y2}" x2="${xx + 9}" y2="${y2}"></line>
         <text class="${color} label" x="${xx + (anchor === "start" ? 12 : -12)}" y="${(y1 + y2) / 2 + 5}" text-anchor="${anchor}">${label}</text>
       `;
 
-      const sinkW = Math.min(430, state.vanityWidth * .34);
-      const sinkX = g.vanityX + Math.max(120, state.vanityWidth * .18);
+        const sinkW = Math.min(430, state.vanityWidth * 0.34);
+        const sinkX = g.vanityX + Math.max(120, state.vanityWidth * 0.18);
 
-      const warnings = [];
-      const leftClearance = Math.round(g.cabinetX);
-      const rightClearance = Math.round(state.roomWidth - g.cabinetX - g.cabinetWidth);
-      if (g.cabinetWidth > state.roomWidth) warnings.push("镜柜总宽超过空间宽度。");
-      if (state.vanityWidth > state.roomWidth) warnings.push("洗漱台宽度超过空间宽度。");
-      if (g.cabinetTop > state.roomHeight) warnings.push("镜柜上沿超过空间高度。");
-      if (g.vanityBottom < 0) warnings.push("洗漱台下沿低于地面。");
-      if (leftClearance < 0 || rightClearance < 0) warnings.push("镜柜左右有一侧超出空间。");
+        const warnings = [];
+        const leftClearance = Math.round(g.cabinetX);
+        const rightClearance = Math.round(
+          state.roomWidth - g.cabinetX - g.cabinetWidth,
+        );
+        if (g.cabinetWidth > state.roomWidth)
+          warnings.push("镜柜总宽超过空间宽度。");
+        if (state.vanityWidth > state.roomWidth)
+          warnings.push("洗漱台宽度超过空间宽度。");
+        if (g.cabinetTop > state.roomHeight)
+          warnings.push("镜柜上沿超过空间高度。");
+        if (g.vanityBottom < 0) warnings.push("洗漱台下沿低于地面。");
+        if (leftClearance < 0 || rightClearance < 0)
+          warnings.push("镜柜左右有一侧超出空间。");
+        if (state.leftSplitWidth !== leftSplitWidth)
+          warnings.push("左侧分割线已按左侧总宽自动限制。");
 
-      statusEl.textContent = warnings.length ? warnings.join(" ") : "当前尺寸在空间范围内。";
-      statusEl.classList.toggle("warn", warnings.length > 0);
+        statusEl.textContent = warnings.length
+          ? warnings.join(" ")
+          : "当前尺寸在空间范围内。";
+        statusEl.classList.toggle("warn", warnings.length > 0);
 
-      document.getElementById("cabinetTotal").textContent = `${Math.round(g.cabinetWidth)} mm`;
-      document.getElementById("cabinetTop").textContent = `${Math.round(g.cabinetTop)} mm`;
-      document.getElementById("vanityTop").textContent = `${Math.round(g.vanityTop)} mm`;
-      document.getElementById("sideClearance").textContent = `${leftClearance} / ${rightClearance} mm`;
+        document.getElementById("cabinetTotal").textContent =
+          `${Math.round(g.cabinetWidth)} mm`;
+        document.getElementById("cabinetTop").textContent =
+          `${Math.round(g.cabinetTop)} mm`;
+        document.getElementById("vanityTop").textContent =
+          `${Math.round(g.vanityTop)} mm`;
+        document.getElementById("sideClearance").textContent =
+          `${leftClearance} / ${rightClearance} mm`;
 
-      svg.setAttribute("viewBox", `0 0 ${scene.width} ${scene.height}`);
-      svg.innerHTML = `
+        svg.setAttribute("viewBox", `0 0 ${scene.width} ${scene.height}`);
+        svg.innerHTML = `
         <defs>
           <marker id="arrowRed" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
@@ -674,126 +920,151 @@
         <text class="small" x="${roomX + 14}" y="${cabinetY + 26}">背板做满</text>
 
         <rect class="mirror" x="${x(g.cabinetX)}" y="${cabinetY}" width="${w(state.leftWidth)}" height="${cabinetH}"></rect>
-        <line class="split" x1="${x(g.cabinetX + state.leftWidth / 2)}" y1="${cabinetY}" x2="${x(g.cabinetX + state.leftWidth / 2)}" y2="${cabinetY + cabinetH}"></line>
-        ${state.showLights ? `
+        <line class="split" x1="${x(g.cabinetX + leftSplitWidth)}" y1="${cabinetY}" x2="${x(g.cabinetX + leftSplitWidth)}" y2="${cabinetY + cabinetH}"></line>
+        ${
+          state.showLights
+            ? `
           <rect class="light" x="${x(g.cabinetX + 22)}" y="${cabinetY + 4}" width="${Math.max(8, w(state.leftWidth - 44))}" height="${Math.max(3, h(state.lightHeight))}"></rect>
           <rect class="light" x="${x(g.cabinetX + 22)}" y="${cabinetY + cabinetH - Math.max(3, h(state.lightHeight)) - 4}" width="${Math.max(8, w(state.leftWidth - 44))}" height="${Math.max(3, h(state.lightHeight))}"></rect>
-        ` : ""}
+        `
+            : ""
+        }
         <rect class="door" x="${x(g.cabinetX + state.leftWidth)}" y="${cabinetY}" width="${w(state.rightWidth)}" height="${cabinetH}"></rect>
-        <line class="split" x1="${x(g.cabinetX + state.leftWidth + state.rightWidth / 2)}" y1="${cabinetY}" x2="${x(g.cabinetX + state.leftWidth + state.rightWidth / 2)}" y2="${cabinetY + cabinetH}"></line>
-        <text x="${x(g.cabinetX + state.leftWidth + state.rightWidth / 2)}" y="${cabinetY + cabinetH / 2 + 8}" text-anchor="middle" class="label" fill="#111">对开门</text>
 
         <rect class="vanity" x="${x(g.vanityX)}" y="${vanityY}" width="${w(state.vanityWidth)}" height="${vanityH}"></rect>
-        <rect class="sink" x="${x(sinkX)}" y="${vanityY + 8}" width="${w(sinkW)}" height="${Math.max(14, vanityH * .38)}"></rect>
+        <rect class="sink" x="${x(sinkX)}" y="${vanityY + 8}" width="${w(sinkW)}" height="${Math.max(14, vanityH * 0.38)}"></rect>
         <path class="faucet" d="M ${x(sinkX + sinkW / 2 - 26)} ${vanityY + 5} Q ${x(sinkX + sinkW / 2)} ${vanityY - 7} ${x(sinkX + sinkW / 2 + 25)} ${vanityY + 5}"></path>
-        <rect class="vanity-face" x="${x(g.vanityX + state.vanityWidth * .04)}" y="${vanityY + vanityH + 16}" width="${w(state.vanityWidth * .56)}" height="${Math.max(34, h(210))}"></rect>
-        <line class="split" x1="${x(g.vanityX + state.vanityWidth * .32)}" y1="${vanityY + vanityH + 16}" x2="${x(g.vanityX + state.vanityWidth * .32)}" y2="${vanityY + vanityH + 16 + Math.max(34, h(210))}"></line>
-        <text x="${x(g.vanityX + state.vanityWidth * .62)}" y="${vanityY + vanityH + 16 + Math.max(34, h(210)) / 2 + 9}" class="label" fill="#111">洗漱台</text>
+        <rect class="vanity-face" x="${x(g.vanityX + state.vanityWidth * 0.04)}" y="${vanityY + vanityH + 16}" width="${w(state.vanityWidth * 0.56)}" height="${Math.max(34, h(210))}"></rect>
+        <line class="split" x1="${x(g.vanityX + state.vanityWidth * 0.32)}" y1="${vanityY + vanityH + 16}" x2="${x(g.vanityX + state.vanityWidth * 0.32)}" y2="${vanityY + vanityH + 16 + Math.max(34, h(210))}"></line>
+        <text x="${x(g.vanityX + state.vanityWidth * 0.62)}" y="${vanityY + vanityH + 16 + Math.max(34, h(210)) / 2 + 9}" class="label" fill="#111">洗漱台</text>
 
         ${dimH(x(g.cabinetX), x(g.cabinetX + state.leftWidth), cabinetY - 28, `${state.leftWidth} mm`)}
+        ${dimH(x(g.cabinetX), x(g.cabinetX + leftSplitWidth), cabinetY + cabinetH + 26, `${leftSplitWidth} mm`, "blueDim")}
+        ${dimH(x(g.cabinetX + leftSplitWidth), x(g.cabinetX + state.leftWidth), cabinetY + cabinetH + 26, `${leftSplitRightWidth} mm`, "blueDim")}
         ${dimH(x(g.cabinetX + state.leftWidth), x(g.cabinetX + g.cabinetWidth), cabinetY - 28, `${state.rightWidth} mm`)}
         ${dimV(x(g.cabinetX + g.cabinetWidth) + 42, cabinetY, cabinetY + cabinetH, `${state.cabinetHeight} mm`)}
         ${dimH(x(g.vanityX), x(g.vanityX + state.vanityWidth), vanityY + vanityH + 42, `${state.vanityWidth} mm`)}
         ${dimV(x(g.vanityX + state.vanityWidth) + 42, vanityY, vanityY + vanityH, `${state.vanityHeight} mm`)}
         ${dimV(x(g.vanityX) - 44, y(groundMeasureY), floorY, `${state.vanityGround} mm`, "dim", "end")}
         ${dimV(x(g.cabinetX) - 44, y(g.cabinetBottom), y(g.vanityTop), `${state.gap} mm`, "blueDim", "end")}
-        ${state.showLights ? `
+        ${
+          state.showLights
+            ? `
           <text class="blueDim label" x="${x(g.cabinetX + state.leftWidth / 2)}" y="${cabinetY - 52}" text-anchor="middle">灯带</text>
           <text class="blueDim label" x="${x(g.cabinetX + state.leftWidth / 2)}" y="${cabinetY + cabinetH + 34}" text-anchor="middle">灯带</text>
-        ` : ""}
-      `;
-    }
-
-    function updateValue(key, value) {
-      state[key] = value;
-      syncInputs();
-      render();
-    }
-
-    document.querySelectorAll("[data-key]").forEach((input) => {
-      input.addEventListener("input", () => updateValue(input.dataset.key, readNumber(input)));
-    });
-
-    document.querySelectorAll("[data-number]").forEach((input) => {
-      input.addEventListener("change", () => updateValue(input.dataset.number, readNumber(input)));
-      input.addEventListener("input", () => {
-        const key = input.dataset.number;
-        const value = Number(input.value);
-        if (Number.isFinite(value)) {
-          state[key] = value;
-          document.querySelector(`[data-key="${key}"]`).value = value;
-          render();
+        `
+            : ""
         }
+      `;
+      }
+
+      function updateValue(key, value) {
+        state[key] = value;
+        syncInputs();
+        render();
+      }
+
+      document.querySelectorAll("[data-key]").forEach((input) => {
+        input.addEventListener("input", () =>
+          updateValue(input.dataset.key, readNumber(input)),
+        );
       });
-    });
 
-    document.getElementById("showLights").addEventListener("change", (event) => {
-      state.showLights = event.target.checked;
-      render();
-    });
+      document.querySelectorAll("[data-number]").forEach((input) => {
+        input.addEventListener("change", () =>
+          updateValue(input.dataset.number, readNumber(input)),
+        );
+        input.addEventListener("input", () => {
+          const key = input.dataset.number;
+          const value = Number(input.value);
+          if (Number.isFinite(value)) {
+            state[key] = value;
+            document.querySelector(`[data-key="${key}"]`).value = value;
+            render();
+          }
+        });
+      });
 
-    document.querySelectorAll("input[name='groundMode']").forEach((input) => {
-      input.addEventListener("change", () => {
-        state.groundMode = input.value;
+      document
+        .getElementById("showLights")
+        .addEventListener("change", (event) => {
+          state.showLights = event.target.checked;
+          render();
+        });
+
+      document.querySelectorAll("input[name='groundMode']").forEach((input) => {
+        input.addEventListener("change", () => {
+          state.groundMode = input.value;
+          render();
+        });
+      });
+
+      document.getElementById("reset").addEventListener("click", () => {
+        Object.assign(state, defaults);
+        syncInputs();
         render();
       });
-    });
 
-    document.getElementById("reset").addEventListener("click", () => {
-      Object.assign(state, defaults);
+      function specText() {
+        const g = geometry();
+        const leftSplitWidth = clamp(
+          state.leftSplitWidth,
+          80,
+          Math.max(80, state.leftWidth - 80),
+        );
+        const leftSplitRightWidth = state.leftWidth - leftSplitWidth;
+        return [
+          "浴室镜柜尺寸",
+          `空间：宽 ${state.roomWidth}mm，高 ${state.roomHeight}mm`,
+          `镜柜：左侧 ${state.leftWidth}mm（分割线左 ${leftSplitWidth}mm，右 ${leftSplitRightWidth}mm），右侧 ${state.rightWidth}mm，总宽 ${g.cabinetWidth}mm，高 ${state.cabinetHeight}mm`,
+          `镜柜位置：底部离地 ${g.cabinetBottom}mm，上沿离地 ${g.cabinetTop}mm，左右余量 ${Math.round(g.cabinetX)} / ${Math.round(state.roomWidth - g.cabinetX - g.cabinetWidth)}mm`,
+          `洗漱台：宽 ${state.vanityWidth}mm，高 ${state.vanityHeight}mm，上沿离地 ${g.vanityTop}mm，下沿离地 ${g.vanityBottom}mm`,
+          `台面到镜柜底部：${state.gap}mm`,
+          `灯带：${state.showLights ? `显示，厚 ${state.lightHeight}mm` : "不显示"}`,
+        ].join("\n");
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(
+          () => toast.classList.remove("show"),
+          1600,
+        );
+      }
+
+      function fallbackCopy(text) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.left = "-9999px";
+        document.body.appendChild(area);
+        area.select();
+        const copied = document.execCommand("copy");
+        area.remove();
+        return copied;
+      }
+
+      document
+        .getElementById("copySpec")
+        .addEventListener("click", async () => {
+          const text = specText();
+          try {
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(text);
+            } else if (!fallbackCopy(text)) {
+              throw new Error("copy failed");
+            }
+            showToast("尺寸已复制");
+          } catch {
+            showToast("浏览器限制复制，请手动记录当前尺寸");
+          }
+        });
+
       syncInputs();
       render();
-    });
-
-    function specText() {
-      const g = geometry();
-      return [
-        "浴室镜柜尺寸",
-        `空间：宽 ${state.roomWidth}mm，高 ${state.roomHeight}mm`,
-        `镜柜：左侧 ${state.leftWidth}mm，右侧 ${state.rightWidth}mm，总宽 ${g.cabinetWidth}mm，高 ${state.cabinetHeight}mm`,
-        `镜柜位置：底部离地 ${g.cabinetBottom}mm，上沿离地 ${g.cabinetTop}mm，左右余量 ${Math.round(g.cabinetX)} / ${Math.round(state.roomWidth - g.cabinetX - g.cabinetWidth)}mm`,
-        `洗漱台：宽 ${state.vanityWidth}mm，高 ${state.vanityHeight}mm，上沿离地 ${g.vanityTop}mm，下沿离地 ${g.vanityBottom}mm`,
-        `台面到镜柜底部：${state.gap}mm`,
-        `灯带：${state.showLights ? `显示，厚 ${state.lightHeight}mm` : "不显示"}`
-      ].join("\n");
-    }
-
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add("show");
-      window.clearTimeout(showToast.timer);
-      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1600);
-    }
-
-    function fallbackCopy(text) {
-      const area = document.createElement("textarea");
-      area.value = text;
-      area.setAttribute("readonly", "");
-      area.style.position = "fixed";
-      area.style.left = "-9999px";
-      document.body.appendChild(area);
-      area.select();
-      const copied = document.execCommand("copy");
-      area.remove();
-      return copied;
-    }
-
-    document.getElementById("copySpec").addEventListener("click", async () => {
-      const text = specText();
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-        } else if (!fallbackCopy(text)) {
-          throw new Error("copy failed");
-        }
-        showToast("尺寸已复制");
-      } catch {
-        showToast("浏览器限制复制，请手动记录当前尺寸");
-      }
-    });
-
-    syncInputs();
-    render();
-  </script>
-</body>
+    </script>
+  </body>
 </html>

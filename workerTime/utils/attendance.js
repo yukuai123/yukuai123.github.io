@@ -100,11 +100,22 @@ export function normalizeAttendanceDetail(item, { ignoreForgetDK }) {
 
     target.sb_dk_time =
       target.begin_date_time || `${target.work_day} ${SB_BEGIN_TIME}`;
-    target.xb_dk_time = wcList
+
+    const currentTarget = wcList ? wcList[wcList.length - 1] : target;
+
+    let xb_dk_time = wcList
       ? wcList[wcList.length - 1].end_date_time ||
         target.end_date_time ||
         `${target.work_day} ${SB_END_TIME}`
       : target.end_date_time || `${target.work_day} ${SB_END_TIME}`;
+
+    xb_dk_time = currentTarget.xb_dk_time
+      ? dayjs(currentTarget.xb_dk_time).isAfter(dayjs(xb_dk_time))
+        ? currentTarget.xb_dk_time
+        : xb_dk_time
+      : xb_dk_time;
+
+    target.xb_dk_time = xb_dk_time;
   }
 
   return target;

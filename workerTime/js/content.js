@@ -25,7 +25,9 @@ dayjs.updateLocale("zh-cn", {
 
 async function queryAttendanceDetails(workerDays, staffId) {
   return Promise.all(
-    workerDays.map((item) => querySbDayDetail({ staffId, workDay: item.work_day })),
+    workerDays.map((item) =>
+      querySbDayDetail({ staffId, workDay: item.work_day }),
+    ),
   );
 }
 

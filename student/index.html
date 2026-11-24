@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>学科成长档案 v4 · 折算总分同步</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brandmark">↗</span>
+        <div>学科成长档案<small>v4 · XLS / XLSX · 折算总分同步</small></div>
+      </div>
+      <div class="topactions">
+        <span class="local">仅在本机处理</span
+        ><button id="openImport">导入 / 管理考试</button
+        ><button id="export" class="primary" disabled>导出分析 Excel</button>
+      </div>
+    </header>
+    <main>
+      <section id="empty" class="empty">
+        <div class="sheet-sample">
+          <span>语文</span
+          ><svg viewBox="0 0 320 100">
+            <path d="M0 85L80 35L160 60L240 20L320 10" />
+            <path d="M0 20L80 60L160 40L240 65L320 35" /></svg
+          ><span>数学</span>
+        </div>
+        <h1>把一次分数，放回成长轨迹。</h1>
+        <p>
+          导入两次及以上考试，逐人查看学科排名、得分率与波动。<br />支持这次提供的五种成绩表结构，新增考试可继续追加。
+        </p>
+        <button id="startImport" class="primary big">选择考试 Excel</button
+        ><button id="demo" class="big">查看匿名示例</button>
+        <p class="muted">支持 .xls / .xlsx，单个文件≤30MB。无需联网，无需注册。</p>
+      </section>
+      <section id="workspace" hidden>
+        <div class="opening">
+          <div>
+            <span class="eyebrow">班级学习档案</span>
+            <h1>每一条线，都有下一步。</h1>
+          </div>
+          <div class="counts">
+            <strong id="studentCount"></strong><span>名学生</span
+            ><strong id="examCount"></strong><span>次考试</span>
+          </div>
+        </div>
+        <div id="timeline" class="timeline"></div>
+        <div id="notice" class="notice"></div>
+        <div class="viewtabs">
+          <button id="personalTab" class="active">个人成长报告</button
+          ><button id="classTab">全班趋势总览</button><span></span
+          ><button id="printOne">导出当前 PDF</button
+          ><button id="printAll">导出全班 PDF</button><button id="exportPNG">导出当前 PNG</button><button id="exportAllPNG">全班 PNG（ZIP）</button>
+        </div>
+        <div id="personal" class="personal">
+          <aside>
+            <label for="search">查找学生</label
+            ><input id="search" placeholder="姓名 / 学号" /><label
+              for="studentFilter"
+              >名单范围</label
+            ><select id="studentFilter">
+              <option value="all">全部学生</option>
+              <option value="down">最近校次退步</option>
+              <option value="weak">存在相对短板</option>
+            </select>
+            <div id="studentList" class="studentlist"></div>
+          </aside>
+          <article>
+            <div class="studenthead">
+              <div>
+                <span class="eyebrow">个人成长报告</span>
+                <h2 id="studentName"></h2>
+                <p id="studentMeta"></p>
+              </div>
+              <div class="reportactions">
+                <button id="prev">上一位</button
+                ><button id="next">下一位</button>
+              </div>
+            </div>
+            <div class="reportoptions"><label>分数口径 <select id="scoreMode"><option value="configured">按导入配置处理</option><option value="raw">原表分数</option><option value="folded">单科统一折算分数</option></select></label><span>每人一张 A4 · 双轴组合图 · 导出300dpi</span></div>
+            <div id="a4Preview" class="a4preview"></div>
+            <details class="reportanalysis"><summary>查看趋势分析与沟通建议</summary><div id="diagnosis" class="diagnosis"></div><div id="actions"></div></details>
+          </article>
+        </div>
+        <div id="classView" hidden>
+          <h2>全班趋势总览</h2>
+          <p class="muted">
+            校次保留源表口径；共同七科班内排名按统一折算成绩重新计算。点击姓名查看个人报告。
+          </p>
+          <div id="cohort" class="scroll"></div>
+          <h3>逐科均值（得分率）</h3>
+          <div id="classSubjects" class="scroll"></div>
+        </div>
+      </section>
+      <section class="method">
+        <h3>怎么算、怎么看</h3>
+        <p>
+          共同七科：语文、数学、英语各100，政治、历史各50，生物、地理各30，总计460。物理单列，不混入五次共同七科比较。得分率＝分数÷该科满分。班内排名按同一次已导入学生重算，同分同名次。相对短板＝单科班次较共同七科班次落后至少5名，只用于安排进一步查卷与沟通。
+        </p>
+        <p>
+          排名与得分率各有局限：考试难度、范围、参试人数及总分权重可能变化。未提供年级全体成绩时，不计算年级百分位或标准分；未提供题目得分时，不推断具体知识点薄弱。缺失记录保留空白，折线在缺失处断开。
+        </p>
+        <p>
+          参考：<a
+            href="https://www.xiaohongshu.com/explore/6926c8ae000000000d037e3c"
+            target="_blank"
+            rel="noreferrer"
+            >小红书“期中成绩分析玩出大数据感”</a
+          >的一人一页、学科轨迹思路；本工具独立实现。<span id="saveHint"></span>
+        </p>
+      </section>
+    </main>
+    <dialog id="importDialog">
+      <form method="dialog" class="dialoghead">
+        <h2>导入与口径确认</h2>
+        <button aria-label="关闭">×</button>
+      </form>
+      <div class="dialogbody">
+        <label class="dropzone" id="dropzone" for="files"
+          ><strong>选择或拖入多个成绩表</strong
+          ><span>支持 .xls / .xlsx · 同一考试多个工作表会分别列出供确认</span
+          ><input type="file" id="files" accept=".xls,.xlsx" multiple
+        /></label>
+        <div id="importStatus" role="status"></div>
+        <p class="muted">
+          满分识别结果只是建议，请按试卷确认。已是折算分的列直接使用；原始分可选生物地理×0.3、历史政治×0.5，或保留原分。考试自上而下按时间先后排列；可改名、调整顺序或移除。同名但考号不同会停止合并，避免错配。
+        </p>
+        <div id="examSettings"></div>
+        <label class="confirm"
+          ><input
+            type="checkbox"
+            id="confirmed"
+          />已核对考试顺序、满分、折算处理与学生人数</label
+        >
+        <div class="dialogbuttons">
+          <button id="clearAll" class="danger">清空本次数据</button
+          ><button id="generate" class="primary">生成 / 更新分析</button>
+        </div>
+      </div>
+    </dialog>
+    <div id="toast" role="status"></div>
+    <div id="printArea"></div>
+    <script src="core.js"></script>
+    <script src="xls.js"></script>
+    <script src="excel.js"></script>
+    <script src="report.js"></script>
+    <script src="report-export.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

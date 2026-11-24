@@ -1,6 +1,10 @@
 (function(root){
 'use strict';
 async function raster(svg,type='image/png'){
+ const documentSvg=new DOMParser().parseFromString(svg,'image/svg+xml');
+ if(documentSvg.getElementsByTagName('parsererror').length||documentSvg.documentElement.localName!=='svg'){
+  throw Error('报告图表格式不完整，请刷新页面后重新生成报告。');
+ }
  const blob=new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob);
  try{const img=new Image();img.src=url;await img.decode();const canvas=document.createElement('canvas');canvas.width=2480;canvas.height=3508;const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,2480,3508);ctx.drawImage(img,0,0,2480,3508);const result=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('图片生成失败')),type,.96));canvas.width=1;canvas.height=1;
  if(type==='image/png'){

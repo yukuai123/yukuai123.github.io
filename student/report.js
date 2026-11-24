@@ -218,7 +218,7 @@
           mode,
         );
       });
-      return svg;
+      return svg + "</g></svg>";
     });
   }
   root.A4Report = { render, W, H };

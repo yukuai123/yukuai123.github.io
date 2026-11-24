@@ -33,7 +33,9 @@
         </p>
         <button id="startImport" class="primary big">选择考试 Excel</button
         ><button id="demo" class="big">查看匿名示例</button>
-        <p class="muted">支持 .xls / .xlsx，单个文件≤30MB。无需联网，无需注册。</p>
+        <p class="muted">
+          支持 .xls / .xlsx，单个文件≤30MB。无需联网，无需注册。
+        </p>
       </section>
       <section id="workspace" hidden>
         <div class="opening">
@@ -52,7 +54,9 @@
           <button id="personalTab" class="active">个人成长报告</button
           ><button id="classTab">全班趋势总览</button><span></span
           ><button id="printOne">导出当前 PDF</button
-          ><button id="printAll">导出全班 PDF</button><button id="exportPNG">导出当前 PNG</button><button id="exportAllPNG">全班 PNG（ZIP）</button>
+          ><button id="printAll">导出全班 PDF</button
+          ><button id="exportPNG">导出当前 PNG</button
+          ><button id="exportAllPNG">全班 PNG（ZIP）</button>
         </div>
         <div id="personal" class="personal">
           <aside>
@@ -79,9 +83,22 @@
                 ><button id="next">下一位</button>
               </div>
             </div>
-            <div class="reportoptions"><label>分数口径 <select id="scoreMode"><option value="configured">按导入配置处理</option><option value="raw">原表分数</option><option value="folded">单科统一折算分数</option></select></label><span>每人一张 A4 · 双轴组合图 · 导出300dpi</span></div>
+            <div class="reportoptions">
+              <label
+                >分数口径
+                <select id="scoreMode">
+                  <option value="configured">按导入配置处理</option>
+                  <option value="raw">原表分数</option>
+                  <option value="folded">单科统一折算分数</option>
+                </select></label
+              ><span>每人一张 A4 · 双轴组合图 · 导出300dpi</span>
+            </div>
             <div id="a4Preview" class="a4preview"></div>
-            <details class="reportanalysis"><summary>查看趋势分析与沟通建议</summary><div id="diagnosis" class="diagnosis"></div><div id="actions"></div></details>
+            <details class="reportanalysis">
+              <summary>查看趋势分析与沟通建议</summary>
+              <div id="diagnosis" class="diagnosis"></div>
+              <div id="actions"></div>
+            </details>
           </article>
         </div>
         <div id="classView" hidden>
@@ -93,23 +110,6 @@
           <h3>逐科均值（得分率）</h3>
           <div id="classSubjects" class="scroll"></div>
         </div>
-      </section>
-      <section class="method">
-        <h3>怎么算、怎么看</h3>
-        <p>
-          共同七科：语文、数学、英语各100，政治、历史各50，生物、地理各30，总计460。物理单列，不混入五次共同七科比较。得分率＝分数÷该科满分。班内排名按同一次已导入学生重算，同分同名次。相对短板＝单科班次较共同七科班次落后至少5名，只用于安排进一步查卷与沟通。
-        </p>
-        <p>
-          排名与得分率各有局限：考试难度、范围、参试人数及总分权重可能变化。未提供年级全体成绩时，不计算年级百分位或标准分；未提供题目得分时，不推断具体知识点薄弱。缺失记录保留空白，折线在缺失处断开。
-        </p>
-        <p>
-          参考：<a
-            href="https://www.xiaohongshu.com/explore/6926c8ae000000000d037e3c"
-            target="_blank"
-            rel="noreferrer"
-            >小红书“期中成绩分析玩出大数据感”</a
-          >的一人一页、学科轨迹思路；本工具独立实现。<span id="saveHint"></span>
-        </p>
       </section>
     </main>
     <dialog id="importDialog">
